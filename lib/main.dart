@@ -1,15 +1,23 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'core/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() => runApp(const SandiApp());
+import 'app.dart';
+import 'data/sync/sync_controller.dart';
 
-class SandiApp extends StatelessWidget {
-  const SandiApp({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'SandiApp',
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
-        home: const Scaffold(body: Center(child: Text('SandiApp'))),
-      );
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID');
+  await Supabase.initialize(
+    url: const String.fromEnvironment('SUPABASE_URL'),
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+  );
+  final container = ProviderContainer();
+  if (!kIsWeb) {
+    // sync awal saat app start (best effort; gagal = tetap jalan offline)
+    Future(() => container.read(syncControllerProvider.notifier).syncNow());
+  }
+  runApp(UncontrolledProviderScope(container: container, child: const SandiApp()));
 }
