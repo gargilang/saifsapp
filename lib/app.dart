@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_providers.dart';
 import 'core/theme.dart';
+import 'core/theme_mode.dart';
 import 'features/auth/login_page.dart';
 import 'features/budget/budget_page.dart';
 import 'features/customers/customer_detail_page.dart';
@@ -58,6 +59,7 @@ class SandiApp extends ConsumerWidget {
       title: 'SandiApp',
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
