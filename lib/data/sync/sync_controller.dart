@@ -59,7 +59,7 @@ class SyncController extends Notifier<SyncUiState> {
       await engine.syncAll();
       state = state.copyWith(
           syncing: false, offline: false, lastSync: DateTime.now());
-      invalidateAllData(ref);
+      invalidateAllData(ref.invalidate);
     } catch (_) {
       state = state.copyWith(syncing: false, offline: true);
     } finally {

@@ -62,17 +62,19 @@ final budgetMonthProvider = FutureProvider.autoDispose
         (ref, ym) => ref.watch(repoProvider).budgetMonth(ym.$1, ym.$2));
 
 /// Jalankan mutasi lalu refresh semua data provider.
-Future<T> mutate<T>(Ref ref, Future<T> Function() action) async {
+/// [ref] bisa WidgetRef (UI) maupun Ref (Notifier) — keduanya punya `invalidate`.
+Future<T> mutate<T>(WidgetRef ref, Future<T> Function() action) async {
   final r = await action();
-  invalidateAllData(ref);
+  invalidateAllData(ref.invalidate);
   return r;
 }
 
-void invalidateAllData(Ref ref) {
-  ref.invalidate(customersProvider);
-  ref.invalidate(customerDetailProvider);
-  ref.invalidate(dashboardProvider);
-  ref.invalidate(profitYearlyProvider);
-  ref.invalidate(profitMonthlyProvider);
-  ref.invalidate(budgetMonthProvider);
+/// Terima tear-off `ref.invalidate` supaya cocok untuk WidgetRef & Ref.
+void invalidateAllData(void Function(ProviderOrFamily) invalidate) {
+  invalidate(customersProvider);
+  invalidate(customerDetailProvider);
+  invalidate(dashboardProvider);
+  invalidate(profitYearlyProvider);
+  invalidate(profitMonthlyProvider);
+  invalidate(budgetMonthProvider);
 }
