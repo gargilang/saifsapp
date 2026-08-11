@@ -33,47 +33,79 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final loading = ref.watch(authControllerProvider).isLoading;
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              shrinkWrap: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [cs.surface, cs.surfaceContainer],
+          ),
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              children: [
-                Text('SandiApp',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) =>
-                      (v == null || !v.contains('@')) ? 'Email tidak valid' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _password,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  validator: (v) =>
-                      (v == null || v.length < 6) ? 'Minimal 6 karakter' : null,
-                  onFieldSubmitted: (_) => _submit(),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: loading ? null : _submit,
-                  child: loading
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Masuk'),
-                ),
-              ],
+              child: Form(
+                key: _formKey,
+                child: Column(children: [
+                  const SizedBox(height: 48),
+                  Text('SandiApp',
+                      style: Theme.of(context)
+                          .textTheme
+                          .displayMedium
+                          ?.copyWith(color: cs.primary)),
+                  const SizedBox(height: 8),
+                  Text('Kelola kredit barang dengan mudah',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 48),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(children: [
+                        TextFormField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
+                          validator: (v) => (v == null || !v.contains('@'))
+                              ? 'Email tidak valid'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _password,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock_outlined),
+                          ),
+                          validator: (v) => (v == null || v.length < 6)
+                              ? 'Minimal 6 karakter'
+                              : null,
+                          onFieldSubmitted: (_) => _submit(),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: loading ? null : _submit,
+                          child: loading
+                              ? const SizedBox.square(
+                                  dimension: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Text('Masuk'),
+                        ),
+                      ]),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                ]),
+              ),
             ),
           ),
         ),
