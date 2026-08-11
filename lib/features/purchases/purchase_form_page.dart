@@ -85,9 +85,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
           MoneyInputField(
               controller: _hargaBeli, label: 'Harga beli (opsional, untuk laporan)'),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.date_range),
-            label: Text('Tanggal beli: ${tampilTanggal(_tanggal)}'),
+          FilledButton.tonal(
             onPressed: () async {
               final picked = await showDatePicker(
                 context: context,
@@ -98,6 +96,11 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
               );
               if (picked != null) setState(() => _tanggal = picked);
             },
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.date_range, size: 18),
+              const SizedBox(width: 8),
+              Text('Tanggal beli: ${tampilTanggal(_tanggal)}'),
+            ]),
           ),
           const SizedBox(height: 24),
           FilledButton(

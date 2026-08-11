@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../app_providers.dart';
@@ -49,7 +50,14 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
       updatedAt: now,
     );
     await mutate(ref, () => ref.read(repoProvider).saveCustomer(customer));
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+      if (e == null) {
+        // customer baru: langsung ke detail agar tombol hapus/edit tersedia
+        context.pushReplacement('/customers/${customer.id}');
+      } else {
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override

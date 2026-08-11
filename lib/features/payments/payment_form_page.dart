@@ -84,7 +84,11 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
               ('200rb', 200000),
               ('500rb', 500000),
             ])
-              ActionChip(label: Text(label), onPressed: () => _setJumlah(nilai)),
+              ActionChip(
+                label: Text(label),
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                onPressed: () => _setJumlah(nilai),
+              ),
           ]),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
@@ -98,9 +102,7 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
             onChanged: (v) => setState(() => _metode = v ?? 'tunai'),
           ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.date_range),
-            label: Text('Tanggal bayar: ${tampilTanggal(_tanggal)}'),
+          FilledButton.tonal(
             onPressed: () async {
               final picked = await showDatePicker(
                 context: context,
@@ -111,6 +113,11 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
               );
               if (picked != null) setState(() => _tanggal = picked);
             },
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.date_range, size: 18),
+              const SizedBox(width: 8),
+              Text('Tanggal bayar: ${tampilTanggal(_tanggal)}'),
+            ]),
           ),
           const SizedBox(height: 12),
           TextFormField(
