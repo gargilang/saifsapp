@@ -22,18 +22,35 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SandiApp'), actions: const [SyncBadge()]),
+      appBar: AppBar(
+        title: const Text('SandiApp'),
+        actions: const [SyncBadge(), SizedBox(width: 8)],
+      ),
       body: Column(children: [const OfflineBanner(), Expanded(child: child)]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _indexOf(context),
         onDestinationSelected: (i) => context.go(_tabs[i]),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Beranda'),
-          NavigationDestination(icon: Icon(Icons.people_outline), label: 'Customer'),
-          NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Laporan'),
-          NavigationDestination(icon: Icon(Icons.wallet_outlined), label: 'Anggaran'),
           NavigationDestination(
-              icon: Icon(Icons.settings_outlined), label: 'Pengaturan'),
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Beranda'),
+          NavigationDestination(
+              icon: Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people),
+              label: 'Customer'),
+          NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart),
+              label: 'Laporan'),
+          NavigationDestination(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              selectedIcon: Icon(Icons.account_balance_wallet),
+              label: 'Anggaran'),
+          NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Pengaturan'),
         ],
       ),
     );
