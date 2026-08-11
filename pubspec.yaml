@@ -43,6 +43,7 @@ dependencies:
   workmanager: ^0.10.7
   intl: 0.20.2
   fl_chart: ^1.2.0
+  google_fonts: ^6.2.1
   uuid: ^4.6.0
   shared_preferences: ^2.5.5
   flutter_localizations:
