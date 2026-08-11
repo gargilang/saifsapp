@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app_providers.dart';
 import '../../core/utils/money.dart';
+import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state.dart';
 import 'customer_form_page.dart';
 
@@ -17,30 +18,40 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   String _query = '';
   bool _sortByHutang = false;
 
+  String _inisial(String nama) {
+    final parts = nama.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return nama.isNotEmpty ? nama[0].toUpperCase() : '?';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final data =
         ref.watch(customersProvider((query: _query, sortByHutang: _sortByHutang)));
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         heroTag: 'customers-fab',
+        icon: const Icon(Icons.person_add_outlined),
+        label: const Text('Tambah'),
         onPressed: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const CustomerFormPage())),
-        child: const Icon(Icons.person_add),
       ),
       body: Column(children: [
         Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(children: [
             Expanded(
               child: TextField(
-                decoration: const InputDecoration(
-                    hintText: 'Cari nama customer...',
-                    prefixIcon: Icon(Icons.search)),
+                decoration: InputDecoration(
+                  hintText: 'Cari nama customer...',
+                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                ),
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-            IconButton(
+            const SizedBox(width: 8),
+            IconButton.outlined(
               tooltip: _sortByHutang ? 'Urut nama' : 'Urut hutang terbesar',
               icon: Icon(_sortByHutang ? Icons.sort_by_alpha : Icons.sort),
               onPressed: () => setState(() => _sortByHutang = !_sortByHutang),
@@ -55,21 +66,69 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                 ? const EmptyState(message: 'Belum ada customer.')
                 : RefreshIndicator(
                     onRefresh: () async => ref.invalidate(customersProvider),
-                    child: ListView.builder(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                       itemCount: rows.length,
+                      separatorBuilder: (ctx, i) => const SizedBox(height: 4),
                       itemBuilder: (_, i) {
                         final r = rows[i];
                         final lunas = r.totalHutang > 0 && r.sisa <= 0;
-                        return ListTile(
-                          title: Text(r.customer.nama),
-                          subtitle: lunas
-                              ? const Text('LUNAS')
-                              : Text('Sisa: ${formatRupiah(r.sisa)}'),
-                          trailing: lunas
-                              ? const Icon(Icons.check_circle_outline,
-                                  color: Colors.green)
-                              : null,
-                          onTap: () => context.push('/customers/${r.customer.id}'),
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: cs.primaryContainer,
+                              child: Text(_inisial(r.customer.nama),
+                                  style: TextStyle(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13)),
+                            ),
+                            title: Text(r.customer.nama,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600)),
+                            subtitle: lunas
+                                ? Row(children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: cs.tertiary
+                                            .withValues(alpha: 0.15),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
+                                      ),
+                                      child: Text('LUNAS',
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              color: cs.tertiary)),
+                                    ),
+                                  ])
+                                : Text('Sisa: ${formatRupiah(r.sisa)}',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete_outline,
+                                  size: 20, color: cs.onSurfaceVariant),
+                              tooltip: 'Hapus customer',
+                              onPressed: () async {
+                                if (await confirmDialog(context,
+                                    title: 'Hapus customer?',
+                                    message:
+                                        'Data ${r.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
+                                  await mutate(
+                                      ref,
+                                      () => ref
+                                          .read(repoProvider)
+                                          .deleteCustomer(r.customer.id));
+                                }
+                              },
+                            ),
+                            onTap: () =>
+                                context.push('/customers/${r.customer.id}'),
+                          ),
                         );
                       },
                     ),
