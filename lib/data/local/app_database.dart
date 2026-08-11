@@ -95,6 +95,11 @@ class AppDatabase extends _$AppDatabase {
       (select(customers)..where((t) => t.deletedAt.isNull())).get();
   Future<void> upsertCustomerRow(CustomersCompanion c) =>
       into(customers).insertOnConflictUpdate(c);
+  Future<void> softDeleteCustomerRow(String id, DateTime at) =>
+      (update(customers)..where((t) => t.id.equals(id))).write(
+          CustomersCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
   Future<List<CustomerRow>> dirtyCustomerRows() =>
       (select(customers)..where((t) => t.isDirty)).get();
   Future<void> clearCustomersDirty(List<String> ids) =>
@@ -109,6 +114,11 @@ class AppDatabase extends _$AppDatabase {
       (select(purchases)..where((t) => t.deletedAt.isNull())).get();
   Future<void> upsertPurchaseRow(PurchasesCompanion c) =>
       into(purchases).insertOnConflictUpdate(c);
+  Future<void> softDeletePurchaseRow(String id, DateTime at) =>
+      (update(purchases)..where((t) => t.id.equals(id))).write(
+          PurchasesCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
   Future<List<PurchaseRow>> dirtyPurchaseRows() =>
       (select(purchases)..where((t) => t.isDirty)).get();
   Future<void> clearPurchasesDirty(List<String> ids) =>
@@ -123,6 +133,11 @@ class AppDatabase extends _$AppDatabase {
       (select(payments)..where((t) => t.deletedAt.isNull())).get();
   Future<void> upsertPaymentRow(PaymentsCompanion c) =>
       into(payments).insertOnConflictUpdate(c);
+  Future<void> softDeletePaymentRow(String id, DateTime at) =>
+      (update(payments)..where((t) => t.id.equals(id))).write(
+          PaymentsCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
   Future<List<PaymentRow>> dirtyPaymentRows() =>
       (select(payments)..where((t) => t.isDirty)).get();
   Future<void> clearPaymentsDirty(List<String> ids) =>
@@ -137,6 +152,11 @@ class AppDatabase extends _$AppDatabase {
       (select(budgetEntries)..where((t) => t.deletedAt.isNull())).get();
   Future<void> upsertBudgetEntryRow(BudgetEntriesCompanion c) =>
       into(budgetEntries).insertOnConflictUpdate(c);
+  Future<void> softDeleteBudgetEntryRow(String id, DateTime at) =>
+      (update(budgetEntries)..where((t) => t.id.equals(id))).write(
+          BudgetEntriesCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
   Future<List<BudgetEntryRow>> dirtyBudgetEntryRows() =>
       (select(budgetEntries)..where((t) => t.isDirty)).get();
   Future<void> clearBudgetEntriesDirty(List<String> ids) =>

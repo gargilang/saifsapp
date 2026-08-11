@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart' show Value;
-
 import '../models/budget_entry.dart';
 import '../models/customer.dart';
 import '../models/payment.dart';
@@ -36,19 +34,15 @@ class DriftBackend implements Backend {
       db.upsertBudgetEntryRow(v.toCompanion(dirty: true));
 
   @override
-  Future<void> deleteCustomer(String id, DateTime at) => db.upsertCustomerRow(
-      CustomersCompanion(id: Value(id), deletedAt: Value(at),
-          updatedAt: Value(at), isDirty: const Value(true)));
+  Future<void> deleteCustomer(String id, DateTime at) =>
+      db.softDeleteCustomerRow(id, at);
   @override
-  Future<void> deletePurchase(String id, DateTime at) => db.upsertPurchaseRow(
-      PurchasesCompanion(id: Value(id), deletedAt: Value(at),
-          updatedAt: Value(at), isDirty: const Value(true)));
+  Future<void> deletePurchase(String id, DateTime at) =>
+      db.softDeletePurchaseRow(id, at);
   @override
-  Future<void> deletePayment(String id, DateTime at) => db.upsertPaymentRow(
-      PaymentsCompanion(id: Value(id), deletedAt: Value(at),
-          updatedAt: Value(at), isDirty: const Value(true)));
+  Future<void> deletePayment(String id, DateTime at) =>
+      db.softDeletePaymentRow(id, at);
   @override
-  Future<void> deleteBudgetEntry(String id, DateTime at) => db.upsertBudgetEntryRow(
-      BudgetEntriesCompanion(id: Value(id), deletedAt: Value(at),
-          updatedAt: Value(at), isDirty: const Value(true)));
+  Future<void> deleteBudgetEntry(String id, DateTime at) =>
+      db.softDeleteBudgetEntryRow(id, at);
 }
