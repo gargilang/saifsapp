@@ -5,6 +5,14 @@ abstract class RemoteStore {
   /// Ambil semua row (semua kolom), atau hanya yang updated_at > [since].
   Future<List<Map<String, dynamic>>> fetchSince(String table, DateTime? since);
   Future<void> upsert(String table, List<Map<String, dynamic>> rows);
+
+  /// Panggil Supabase Edge Function.
+  /// [method] default 'POST'. Gunakan 'GET' untuk operasi baca tanpa body.
+  Future<Map<String, dynamic>> callFunction(
+    String name, {
+    String method = 'POST',
+    Map<String, dynamic>? body,
+  });
 }
 
 class SupabaseRemoteStore implements RemoteStore {
@@ -23,4 +31,29 @@ class SupabaseRemoteStore implements RemoteStore {
   @override
   Future<void> upsert(String table, List<Map<String, dynamic>> rows) =>
       _client.from(table).upsert(rows);
+
+  @override
+  Future<Map<String, dynamic>> callFunction(
+    String name, {
+    String method = 'POST',
+    Map<String, dynamic>? body,
+  }) async {
+    final httpMethod = HttpMethod.values.firstWhere(
+      (m) => m.name.toUpperCase() == method.toUpperCase(),
+      orElse: () => HttpMethod.post,
+    );
+    final response = await _client.functions.invoke(
+      name,
+      method: httpMethod,
+      body: body,
+    );
+    if (response.data == null) {
+      throw Exception('Edge Function $name: response kosong');
+    }
+    final data = response.data as Map<String, dynamic>;
+    if (data.containsKey('error')) {
+      throw Exception(data['error'] as String);
+    }
+    return data;
+  }
 }

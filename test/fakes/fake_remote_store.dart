@@ -25,4 +25,13 @@ class FakeRemoteStore implements RemoteStore {
       t[row['id'] as String] = {...row, 'updated_at': clock().toIso8601String()};
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> callFunction(
+    String name, {
+    String method = 'POST',
+    Map<String, dynamic>? body,
+  }) async {
+    throw UnimplementedError('callFunction tidak dipakai di test ini');
+  }
 }
