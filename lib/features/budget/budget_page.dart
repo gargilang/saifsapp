@@ -35,6 +35,7 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final data = ref.watch(budgetMonthProvider((_bulan.year, _bulan.month)));
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -43,14 +44,22 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
         child: const Icon(Icons.add),
       ),
       body: Column(children: [
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          IconButton(
-              icon: const Icon(Icons.chevron_left), onPressed: () => _geser(-1)),
-          Text(bulanTahun(_bulan.year, _bulan.month),
-              style: Theme.of(context).textTheme.titleMedium),
-          IconButton(
-              icon: const Icon(Icons.chevron_right), onPressed: () => _geser(1)),
-        ]),
+        // ── Navigator bulan ───────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          color: cs.surfaceContainer,
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: () => _geser(-1)),
+            Text(bulanTahun(_bulan.year, _bulan.month),
+                style: Theme.of(context).textTheme.titleMedium),
+            IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () => _geser(1)),
+          ]),
+        ),
+        Divider(height: 1, color: cs.surfaceContainerHighest),
         Expanded(
           child: data.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -58,46 +67,95 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
             data: (lines) => lines.isEmpty
                 ? const EmptyState(message: 'Belum ada transaksi bulan ini.')
                 : ListView(children: [
+                    // ── Saldo besar ──────────────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text('Saldo: ${formatRupiah(lines.last.saldo)}',
-                          style: Theme.of(context).textTheme.headlineSmall),
-                    ),
-                    for (final l in lines)
-                      ListTile(
-                        dense: true,
-                        title: Text(l.entry.namaTransaksi),
-                        subtitle: Text(tampilTanggal(l.entry.tanggal)),
-                        leading: Icon(
-                          l.entry.tipe == 'pemasukan'
-                              ? Icons.arrow_downward
-                              : Icons.arrow_upward,
-                          color: l.entry.tipe == 'pemasukan'
-                              ? Colors.green
-                              : Colors.red,
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                                '${l.entry.tipe == 'pemasukan' ? '+' : '-'}${formatRupiah(l.entry.jumlah)}'),
-                            Text('Saldo: ${formatRupiah(l.saldo)}',
+                            Text('SALDO',
                                 style: Theme.of(context).textTheme.labelSmall),
-                          ],
-                        ),
-                        onLongPress: () async {
-                          if (await confirmDialog(context,
-                              title: 'Hapus transaksi?',
-                              message: l.entry.namaTransaksi)) {
-                            await mutate(
-                                ref,
-                                () => ref
-                                    .read(repoProvider)
-                                    .deleteBudgetEntry(l.entry.id));
-                          }
-                        },
-                      ),
+                            const SizedBox(height: 4),
+                            Text(formatRupiah(lines.last.saldo),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displayMedium
+                                    ?.copyWith(
+                                        color: lines.last.saldo >= 0
+                                            ? cs.primary
+                                            : cs.error)),
+                          ]),
+                    ),
+                    Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(children: [
+                        for (int i = 0; i < lines.length; i++) ...[
+                          if (i > 0)
+                            Divider(
+                                height: 1,
+                                indent: 16,
+                                color: cs.surfaceContainerHighest),
+                          ListTile(
+                            dense: true,
+                            leading: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: (lines[i].entry.tipe == 'pemasukan'
+                                        ? cs.tertiary
+                                        : cs.error)
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                lines[i].entry.tipe == 'pemasukan'
+                                    ? Icons.arrow_downward
+                                    : Icons.arrow_upward,
+                                size: 18,
+                                color: lines[i].entry.tipe == 'pemasukan'
+                                    ? cs.tertiary
+                                    : cs.error,
+                              ),
+                            ),
+                            title: Text(lines[i].entry.namaTransaksi,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                            subtitle:
+                                Text(tampilTanggal(lines[i].entry.tanggal)),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                    '${lines[i].entry.tipe == 'pemasukan' ? '+' : '-'}${formatRupiah(lines[i].entry.jumlah)}',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: lines[i].entry.tipe == 'pemasukan'
+                                            ? cs.tertiary
+                                            : cs.error)),
+                                Text(
+                                    'Saldo: ${formatRupiah(lines[i].saldo)}',
+                                    style:
+                                        Theme.of(context).textTheme.labelSmall),
+                              ],
+                            ),
+                            onLongPress: () async {
+                              if (await confirmDialog(context,
+                                  title: 'Hapus transaksi?',
+                                  message: lines[i].entry.namaTransaksi)) {
+                                await mutate(
+                                    ref,
+                                    () => ref
+                                        .read(repoProvider)
+                                        .deleteBudgetEntry(
+                                            lines[i].entry.id));
+                              }
+                            },
+                          ),
+                        ],
+                      ]),
+                    ),
+                    const SizedBox(height: 80),
                   ]),
           ),
         ),
