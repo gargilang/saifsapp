@@ -7,6 +7,8 @@ plugins {
 android {
     namespace = "com.sandiapp.sandiapp"
     compileSdk = flutter.compileSdkVersion
+    // Pin ke build-tools yang sudah lengkap di cache lokal (hindari unduh 36.0.0 dari host lambat)
+    buildToolsVersion = "36.1.0"
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

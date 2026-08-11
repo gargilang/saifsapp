@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Jalankan app di Android (emulator atau device).
-# Usage: ./scripts/run_android.sh [--release] [flutter run flags tambahan]
+# Usage dari bash/zsh: ./scripts/run_android.sh [flutter run flags tambahan]
+# Usage dari fish: bash scripts/run_android.sh
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../.env"
