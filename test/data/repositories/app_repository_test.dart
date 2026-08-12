@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sandiapp/core/logic/collectibility.dart';
 import 'package:sandiapp/core/logic/fifo.dart';
 import 'package:sandiapp/data/models/budget_entry.dart';
 import 'package:sandiapp/data/models/customer.dart';
@@ -41,7 +42,7 @@ void main() {
         currentUserId: () => 'admin-1', onLocalWrite: () => syncRequested++);
   });
 
-  test('customers: saldo dihitung, search, sortByHutang', () async {
+  test('customers: saldo dihitung, search, sort', () async {
     final all = await repo.customers();
     final wiwik = all.singleWhere((e) => e.customer.id == 'c1');
     expect(wiwik.totalHutang, 3250000);
@@ -49,7 +50,7 @@ void main() {
     expect(wiwik.sisa, 750000);
 
     expect((await repo.customers(query: 'ika')).single.customer.nama, 'IKA');
-    final sorted = await repo.customers(sortByHutang: true);
+    final sorted = await repo.customers(sort: CustomerSort.hutang);
     expect(sorted.first.customer.id, 'c2'); // sisa 4jt > 750rb > 0
   });
 
@@ -91,5 +92,48 @@ void main() {
     ]);
     final lines = await repo.budgetMonth(2026, 8);
     expect(lines.single.saldo, 750000);
+  });
+
+  test('customers: kolektibilitas + filter macet/berhutang/lunas + sort terakhirBayar',
+      () async {
+    final t = DateTime(2026, 8, 12);
+    final all = await repo.customers(today: t);
+    final wiwik = all.singleWhere((e) => e.customer.id == 'c1');
+    expect(wiwik.lastPaymentAt, DateTime(2026, 8, 5));
+    expect(wiwik.collectibility, Collectibility.lancar); // 7 hari
+
+    final anas = all.singleWhere((e) => e.customer.id == 'c3');
+    expect(anas.collectibility, isNull); // tanpa pembelian -> tanpa hutang
+
+    backend.customers.add(c('c4', 'BUDI'));
+    backend.purchases.add(p('p9', 'c4', 1000000, DateTime(2026, 1, 1)));
+    backend.payments.add(pm('m9', 'c4', 100000, DateTime(2026, 3, 1))); // 164 hari lalu
+
+    final macet = await repo.customers(filter: CustomerFilter.macet, today: t);
+    expect(macet.map((e) => e.customer.id), ['c4']);
+
+    final berhutang = await repo.customers(filter: CustomerFilter.berhutang, today: t);
+    expect(berhutang.map((e) => e.customer.id), containsAll(['c1', 'c2', 'c4']));
+
+    final byLast = await repo.customers(sort: CustomerSort.terakhirBayar, today: t);
+    expect(byLast.first.customer.id, 'c2'); // lastPaymentAt 8/6, paling baru
+  });
+
+  test('customerDetail: stats terisi dari customerStatsOf', () async {
+    final d = await repo.customerDetail('c1');
+    expect(d.stats.jumlahTransaksi, 2);
+    expect(d.stats.totalBayar, 2500000);
+  });
+
+  test('dashboardStats: macet, tren 6 bulan, aktivitas terbaru', () async {
+    final s = await repo.dashboardStats(now: DateTime(2026, 8, 12));
+    expect(s.macetCount, 0); // m1/m2 baru 6-7 hari lalu
+    expect(s.trend.length, 6);
+    expect(s.trend.last.year, 2026);
+    expect(s.trend.last.month, 8);
+    expect(s.trend.last.total, 3500000);
+    expect(s.trend.first.month, 3); // 5 bulan sebelum Agustus
+    expect(s.aktivitas.first.payment.id, 'm2'); // 8/6, paling baru
+    expect(s.aktivitas.first.customerName, 'IKA');
   });
 }

@@ -1,3 +1,5 @@
+import '../../core/logic/collectibility.dart';
+
 class Customer {
   final String id;
   final String nama;
@@ -70,10 +72,14 @@ class Customer {
 class CustomerWithBalance {
   final Customer customer;
   final int totalHutang, totalBayar;
+  final DateTime? lastPaymentAt;         // pembayaran verified terakhir
+  final Collectibility? collectibility;  // null jika sisa <= 0 (lunas/tanpa hutang)
   const CustomerWithBalance({
     required this.customer,
     required this.totalHutang,
     required this.totalBayar,
+    this.lastPaymentAt,
+    this.collectibility,
   });
   int get sisa => totalHutang - totalBayar;
 }

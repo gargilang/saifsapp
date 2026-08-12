@@ -38,10 +38,10 @@ final authStateProvider =
 
 // ---- data providers (di-invalidate oleh mutate() / selesai sync) ----
 final customersProvider = FutureProvider.autoDispose
-    .family<List<CustomerWithBalance>, ({String query, bool sortByHutang})>(
+    .family<List<CustomerWithBalance>, ({String query, CustomerFilter filter, CustomerSort sort})>(
         (ref, p) => ref
             .watch(repoProvider)
-            .customers(query: p.query, sortByHutang: p.sortByHutang));
+            .customers(query: p.query, filter: p.filter, sort: p.sort));
 
 final customerDetailProvider =
     FutureProvider.autoDispose.family<CustomerDetailData, String>(

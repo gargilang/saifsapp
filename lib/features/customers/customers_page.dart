@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app_providers.dart';
 import '../../core/utils/money.dart';
+import '../../data/repositories/app_repository.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state.dart';
 import 'customer_form_page.dart';
@@ -27,8 +28,11 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final data =
-        ref.watch(customersProvider((query: _query, sortByHutang: _sortByHutang)));
+    final data = ref.watch(customersProvider((
+      query: _query,
+      filter: CustomerFilter.semua,
+      sort: _sortByHutang ? CustomerSort.hutang : CustomerSort.nama,
+    )));
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'customers-fab',
