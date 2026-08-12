@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/brand.dart';
+import '../../widgets/brand_logo.dart';
 import '../../widgets/offline_banner.dart';
 import '../../widgets/sync_badge.dart';
 
@@ -23,7 +25,11 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SandiApp'),
+        title: Row(mainAxisSize: MainAxisSize.min, children: [
+          const BrandLogo(size: 22),
+          const SizedBox(width: 8),
+          Text(kBrandShortName),
+        ]),
         actions: const [SyncBadge(), SizedBox(width: 8)],
       ),
       body: Column(children: [const OfflineBanner(), Expanded(child: child)]),

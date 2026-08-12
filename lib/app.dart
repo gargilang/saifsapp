@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_providers.dart';
+import 'core/brand.dart';
 import 'core/theme.dart';
 import 'core/theme_mode.dart';
 import 'features/auth/login_page.dart';
@@ -56,7 +57,7 @@ class SandiApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'SandiApp',
+      title: kBrandShortName,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: ref.watch(themeModeProvider),
