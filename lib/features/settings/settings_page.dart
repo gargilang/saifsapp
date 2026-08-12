@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/pin_lock.dart';
 import '../../core/utils/whatsapp.dart';
 import '../../core/wa_template.dart';
 
@@ -25,6 +26,7 @@ class SettingsPage extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final sync = ref.watch(syncControllerProvider);
     final template = ref.watch(waTemplateProvider);
+    final pin = ref.watch(pinLockProvider);
     return ListView(padding: const EdgeInsets.all(16), children: [
       // ── Profil ────────────────────────────────────────────────────────────
       Card(
@@ -96,6 +98,24 @@ class SettingsPage extends ConsumerWidget {
             trailing: const Icon(Icons.edit_outlined, size: 18),
             onTap: () => _editWaTemplate(context, ref, template),
           ),
+          Divider(height: 1, indent: 16, color: cs.surfaceContainerHighest),
+          SwitchListTile(
+            secondary: Icon(Icons.lock_outline, color: cs.onSurfaceVariant),
+            title: const Text('Kunci PIN'),
+            subtitle: const Text('Kunci aplikasi dengan PIN 4 digit'),
+            value: pin.enabled,
+            onChanged: (v) async {
+              if (v) {
+                await _setPinDialog(context, ref);
+              } else {
+                if (await confirmDialog(context,
+                    title: 'Matikan kunci PIN?',
+                    message: 'App tidak akan meminta PIN lagi.')) {
+                  await ref.read(pinLockProvider.notifier).disable();
+                }
+              }
+            },
+          ),
         ]),
       ),
       const SizedBox(height: 16),
@@ -119,6 +139,34 @@ class SettingsPage extends ConsumerWidget {
       ),
     ]);
   }
+}
+
+Future<void> _setPinDialog(BuildContext context, WidgetRef ref) async {
+  final ctrl = TextEditingController();
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Atur PIN'),
+      content: TextField(
+        controller: ctrl,
+        obscureText: true,
+        keyboardType: TextInputType.number,
+        maxLength: 4,
+        decoration: const InputDecoration(hintText: '4 digit PIN'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+        FilledButton(
+          onPressed: ctrl.text.length == 4 ? () => Navigator.pop(ctx, true) : null,
+          child: const Text('Aktifkan'),
+        ),
+      ],
+    ),
+  );
+  if (ok == true && ctrl.text.length == 4) {
+    await ref.read(pinLockProvider.notifier).enable(ctrl.text);
+  }
+  ctrl.dispose();
 }
 
 Future<void> _editWaTemplate(BuildContext context, WidgetRef ref, String current) async {

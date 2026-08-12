@@ -6,9 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_providers.dart';
 import 'core/brand.dart';
+import 'core/pin_lock.dart';
 import 'core/theme.dart';
 import 'core/theme_mode.dart';
 import 'features/auth/login_page.dart';
+import 'features/auth/pin_lock_page.dart';
 import 'features/budget/budget_page.dart';
 import 'features/customers/customer_detail_page.dart';
 import 'features/customers/customers_page.dart';
@@ -56,6 +58,16 @@ class SandiApp extends ConsumerWidget {
   const SandiApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pin = ref.watch(pinLockProvider);
+    if (pin.enabled && pin.locked) {
+      return MaterialApp(
+        title: kBrandShortName,
+        theme: buildTheme(Brightness.light),
+        darkTheme: buildTheme(Brightness.dark),
+        themeMode: ref.watch(themeModeProvider),
+        home: const PinLockPage(),
+      );
+    }
     return MaterialApp.router(
       title: kBrandShortName,
       theme: buildTheme(Brightness.light),
