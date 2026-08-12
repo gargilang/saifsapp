@@ -26,11 +26,15 @@ class StatCard extends StatelessWidget {
           Text(label.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: 6),
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(color: effectiveColor, fontWeight: FontWeight.w700)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(color: effectiveColor, fontWeight: FontWeight.w700)),
+          ),
         ]),
       ),
     );
