@@ -53,14 +53,16 @@ Fungsi murni baru `formatRupiahCompact(int rupiah)` di `lib/core/utils/money.dar
 | 5.000.000.000 | `Rp 5 M` |
 | 75.000 | `Rp 75.000` (di bawah 100 rb → format penuh) |
 
-Pembulatan: round-half-up pada presisi yang ditampilkan (87.590.000 → `Rp 87,6 jt`).
+Pembulatan: 2 desimal dibulatkan (round-half-up), trailing zero dibuang
+(87.590.000 → `Rp 87,59 jt`; 87.500.000 → `Rp 87,5 jt`).
 Dipakai untuk angka besar di dashboard & stat cards. TDD.
 
 ## 5. Overhaul Visual per Area
 
 ### 5.1 Splash & icon
-- Native splash (via `flutter_native_splash`) + in-app brand screen: logo S&I
-  fade + scale-in (~600ms), lalu lanjut ke login/dashboard.
+- Native splash statis (via `flutter_native_splash`): logo S&I di atas charcoal.
+- Animasi brand (fade + scale-in ~600ms) ada di **logo halaman login** — bukan
+  layar splash terpisah (YAGNI: native splash → login sudah membawa brand moment).
 - Launcher icon dari PNG logo (foreground emas, background charcoal).
 
 ### 5.2 Login
@@ -145,8 +147,9 @@ filter chip "Macet".
   > Anda saat ini {sisa_hutang}. Terima kasih atas kerja samanya.
 
 - UI: tombol "Ingatkan via WA" di detail customer & list macet →
-  `launchUrl(mode: LaunchMode.externalApplication)`. Jika `no_hp` kosong → tombol
-  disabled + snackbar "Nomor HP belum diisi" dengan aksi ke edit customer.
+  `launchUrl(mode: LaunchMode.externalApplication)`. Jika `no_hp` kosong/tidak
+  valid → tombol **disabled** dengan tooltip "Nomor HP belum diisi". Jika
+  `launchUrl` gagal/return false → snackbar "Tidak bisa membuka WhatsApp".
 - Package: `url_launcher`.
 
 ### F3 — Customer 360°
