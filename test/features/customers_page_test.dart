@@ -54,4 +54,41 @@ void main() {
     expect(find.text('WIWIK'), findsNothing);
     expect(find.text('IKA'), findsOneWidget);
   });
+
+  testWidgets('filter chip Macet menyaring customer yang macet', (tester) async {
+    final now = DateTime.now();
+    final repo = AppRepository(
+      FakeBackend(
+        customers: [
+          Customer(id: 'c1', nama: 'WIWIK', createdAt: now, updatedAt: now),
+          Customer(id: 'c2', nama: 'IKA', createdAt: now, updatedAt: now),
+        ],
+        purchases: [
+          Purchase(id: 'p1', customerId: 'c1', namaBarang: 'HP', hargaJual: 2000000,
+              tanggalBeli: now.subtract(const Duration(days: 120)), createdAt: now, updatedAt: now),
+          Purchase(id: 'p2', customerId: 'c2', namaBarang: 'TV', hargaJual: 1000000,
+              tanggalBeli: now.subtract(const Duration(days: 5)), createdAt: now, updatedAt: now),
+        ],
+        payments: [
+          Payment(id: 'm1', customerId: 'c1', jumlah: 500000,
+              tanggalBayar: now.subtract(const Duration(days: 100)), createdAt: now, updatedAt: now),
+          Payment(id: 'm2', customerId: 'c2', jumlah: 200000,
+              tanggalBayar: now.subtract(const Duration(days: 1)), createdAt: now, updatedAt: now),
+        ],
+      ),
+      currentUserId: () => 'admin-1',
+    );
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repoProvider.overrideWithValue(repo)],
+      child: const MaterialApp(home: Scaffold(body: CustomersPage())),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('WIWIK'), findsOneWidget);
+    expect(find.text('IKA'), findsOneWidget);
+
+    await tester.tap(find.text('Macet'));
+    await tester.pumpAndSettle();
+    expect(find.text('WIWIK'), findsOneWidget); // macet, 100 hari lalu
+    expect(find.text('IKA'), findsNothing);     // lancar, 1 hari lalu
+  });
 }

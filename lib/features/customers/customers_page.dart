@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app_providers.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../widgets/collectibility_dot.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state.dart';
 import 'customer_form_page.dart';
@@ -17,7 +18,22 @@ class CustomersPage extends ConsumerStatefulWidget {
 
 class _CustomersPageState extends ConsumerState<CustomersPage> {
   String _query = '';
-  bool _sortByHutang = false;
+  CustomerFilter _filter = CustomerFilter.semua;
+  CustomerSort _sort = CustomerSort.nama;
+
+  static const _chips = [
+    (CustomerFilter.semua, 'Semua'),
+    (CustomerFilter.berhutang, 'Berhutang'),
+    (CustomerFilter.macet, 'Macet'),
+    (CustomerFilter.lunas, 'Lunas'),
+    (CustomerFilter.arsip, 'Arsip'),
+  ];
+
+  static const _sorts = [
+    (CustomerSort.nama, 'Nama A-Z'),
+    (CustomerSort.hutang, 'Hutang terbesar'),
+    (CustomerSort.terakhirBayar, 'Terakhir bayar'),
+  ];
 
   String _inisial(String nama) {
     final parts = nama.trim().split(' ');
@@ -28,18 +44,14 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final data = ref.watch(customersProvider((
-      query: _query,
-      filter: CustomerFilter.semua,
-      sort: _sortByHutang ? CustomerSort.hutang : CustomerSort.nama,
-    )));
+    final data = ref.watch(customersProvider((query: _query, filter: _filter, sort: _sort)));
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'customers-fab',
         icon: const Icon(Icons.person_add_outlined),
         label: const Text('Tambah'),
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const CustomerFormPage())),
+        onPressed: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const CustomerFormPage())),
       ),
       body: Column(children: [
         Padding(
@@ -55,19 +67,49 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.outlined(
-              tooltip: _sortByHutang ? 'Urut nama' : 'Urut hutang terbesar',
-              icon: Icon(_sortByHutang ? Icons.sort_by_alpha : Icons.sort),
-              onPressed: () => setState(() => _sortByHutang = !_sortByHutang),
+            PopupMenuButton<CustomerSort>(
+              tooltip: 'Urutkan',
+              icon: const Icon(Icons.sort),
+              initialValue: _sort,
+              onSelected: (v) => setState(() => _sort = v),
+              itemBuilder: (ctx) => [
+                for (final s in _sorts) PopupMenuItem(value: s.$1, child: Text(s.$2)),
+              ],
             ),
           ]),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (final c in _chips) ...[
+                ChoiceChip(
+                  label: Text(c.$2),
+                  selected: _filter == c.$1,
+                  onSelected: (_) => setState(() => _filter = c.$1),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ]),
+          ),
+        ),
+        const SizedBox(height: 4),
         Expanded(
           child: data.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => EmptyState(message: 'Gagal memuat data: $e'),
             data: (rows) => rows.isEmpty
-                ? const EmptyState(message: 'Belum ada customer.')
+                ? EmptyState(
+                    message: 'Belum ada customer.',
+                    actionLabel: _filter == CustomerFilter.semua && _query.isEmpty
+                        ? '+ Tambah Customer'
+                        : null,
+                    onAction: _filter == CustomerFilter.semua && _query.isEmpty
+                        ? () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const CustomerFormPage()))
+                        : null,
+                  )
                 : RefreshIndicator(
                     onRefresh: () async => ref.invalidate(customersProvider),
                     child: ListView.separated(
@@ -98,10 +140,8 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: cs.tertiary
-                                            .withValues(alpha: 0.15),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
+                                        color: cs.tertiary.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text('LUNAS',
                                           style: TextStyle(
@@ -110,9 +150,12 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                                               color: cs.tertiary)),
                                     ),
                                   ])
-                                : Text('Sisa: ${formatRupiah(r.sisa)}',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium),
+                                : Row(children: [
+                                    CollectibilityDot(status: r.collectibility),
+                                    const SizedBox(width: 6),
+                                    Text('Sisa: ${formatRupiah(r.sisa)}',
+                                        style: Theme.of(context).textTheme.bodyMedium),
+                                  ]),
                             trailing: IconButton(
                               icon: Icon(Icons.delete_outline,
                                   size: 20, color: cs.onSurfaceVariant),
@@ -122,16 +165,12 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                                     title: 'Hapus customer?',
                                     message:
                                         'Data ${r.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
-                                  await mutate(
-                                      ref,
-                                      () => ref
-                                          .read(repoProvider)
-                                          .deleteCustomer(r.customer.id));
+                                  await mutate(ref,
+                                      () => ref.read(repoProvider).deleteCustomer(r.customer.id));
                                 }
                               },
                             ),
-                            onTap: () =>
-                                context.push('/customers/${r.customer.id}'),
+                            onTap: () => context.push('/customers/${r.customer.id}'),
                           ),
                         );
                       },
