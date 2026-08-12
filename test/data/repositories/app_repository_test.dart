@@ -136,4 +136,18 @@ void main() {
     expect(s.aktivitas.first.payment.id, 'm2'); // 8/6, paling baru
     expect(s.aktivitas.first.customerName, 'IKA');
   });
+
+  test('payment non-verified diabaikan dari balance, lastPaymentAt, dan aktivitas', () async {
+    backend.payments.add(
+      pm('m8', 'c1', 999999, DateTime(2026, 8, 10)).copyWith(statusVerifikasi: 'pending'),
+    );
+    final all = await repo.customers(today: DateTime(2026, 8, 12));
+    final wiwik = all.singleWhere((e) => e.customer.id == 'c1');
+    expect(wiwik.totalBayar, 2500000); // tidak berubah oleh payment pending
+    expect(wiwik.lastPaymentAt, DateTime(2026, 8, 5)); // bukan 8/10
+
+    final s = await repo.dashboardStats(now: DateTime(2026, 8, 12));
+    expect(s.bayarBulanIni, 3500000); // tidak berubah
+    expect(s.aktivitas.map((e) => e.payment.id), isNot(contains('m8')));
+  });
 }
