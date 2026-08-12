@@ -13,6 +13,15 @@ const _dOnSurfVar   = Color(0xFF8A8F9E);
 const _dError       = Color(0xFFFF6B6B);
 const _green        = Color(0xFF34D399);
 
+// ── Brand S&I ──────────────────────────────────────────────────────────────
+const brandGoldA = Color(0xFFF5B942);
+const brandGoldB = Color(0xFFD89B2B);
+const brandGoldGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [brandGoldA, brandGoldB],
+);
+
 // ── Warna light ──────────────────────────────────────────────────────────────
 const _lBg          = Color(0xFFFAFAFA);
 const _lSurface     = Color(0xFFFFFFFF);
