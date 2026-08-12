@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/whatsapp.dart';
+import '../../core/wa_template.dart';
+
 import '../../core/theme_mode.dart';
 import '../../core/utils/dates.dart';
 import '../../data/sync/sync_controller.dart';
@@ -21,6 +24,7 @@ class SettingsPage extends ConsumerWidget {
     final email = Supabase.instance.client.auth.currentUser?.email ?? '-';
     final themeMode = ref.watch(themeModeProvider);
     final sync = ref.watch(syncControllerProvider);
+    final template = ref.watch(waTemplateProvider);
     return ListView(padding: const EdgeInsets.all(16), children: [
       // ── Profil ────────────────────────────────────────────────────────────
       Card(
@@ -84,6 +88,14 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ],
+          Divider(height: 1, indent: 16, color: cs.surfaceContainerHighest),
+          ListTile(
+            leading: Icon(Icons.chat_outlined, color: cs.onSurfaceVariant),
+            title: const Text('Template Pesan WA'),
+            subtitle: Text(template, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: const Icon(Icons.edit_outlined, size: 18),
+            onTap: () => _editWaTemplate(context, ref, template),
+          ),
         ]),
       ),
       const SizedBox(height: 16),
@@ -106,5 +118,53 @@ class SettingsPage extends ConsumerWidget {
         },
       ),
     ]);
+  }
+}
+
+Future<void> _editWaTemplate(BuildContext context, WidgetRef ref, String current) async {
+  final ctrl = TextEditingController(text: current);
+  final saved = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Template Pesan WA'),
+      content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Placeholder: {nama}, {sisa_hutang}, {bisnis}',
+                style: Theme.of(ctx).textTheme.bodyMedium),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              maxLines: 5,
+              decoration: const InputDecoration(hintText: 'Tulis template pesan...'),
+            ),
+          ]),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            await ref.read(waTemplateProvider.notifier).reset();
+            if (ctx.mounted) Navigator.pop(ctx, false);
+          },
+          child: const Text('Reset'),
+        ),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+        FilledButton(
+          onPressed: () async {
+            final v = ctrl.text.trim();
+            await ref
+                .read(waTemplateProvider.notifier)
+                .setTemplate(v.isEmpty ? kDefaultWaTemplate : v);
+            if (ctx.mounted) Navigator.pop(ctx, true);
+          },
+          child: const Text('Simpan'),
+        ),
+      ],
+    ),
+  );
+  ctrl.dispose();
+  if (saved == true && context.mounted) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Template disimpan.')));
   }
 }
