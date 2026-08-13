@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/logic/budget.dart';
 import 'core/logic/profit.dart';
-import 'data/local/app_database.dart';
-import 'data/local/drift_backend.dart';
+import 'data/local/local_providers_native.dart'
+    if (dart.library.html) 'data/local/local_providers_web.dart';
 import 'data/models/customer.dart';
 import 'data/remote/remote_backend.dart';
 import 'data/remote/remote_store.dart';
@@ -13,18 +13,12 @@ import 'data/repositories/app_repository.dart';
 import 'data/repositories/backend.dart';
 import 'data/sync/sync_controller.dart';
 
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(db.close);
-  return db;
-});
-
 final remoteStoreProvider =
     Provider<RemoteStore>((_) => SupabaseRemoteStore(Supabase.instance.client));
 
 final backendProvider = Provider<Backend>((ref) => kIsWeb
     ? RemoteBackend(ref.watch(remoteStoreProvider))
-    : DriftBackend(ref.watch(appDatabaseProvider)));
+    : buildLocalBackend(ref.watch(appDatabaseProvider)));
 
 final repoProvider = Provider<AppRepository>((ref) => AppRepository(
       ref.watch(backendProvider),
@@ -62,7 +56,6 @@ final budgetMonthProvider = FutureProvider.autoDispose
         (ref, ym) => ref.watch(repoProvider).budgetMonth(ym.$1, ym.$2));
 
 /// Jalankan mutasi lalu refresh semua data provider.
-/// [ref] bisa WidgetRef (UI) maupun Ref (Notifier) — keduanya punya `invalidate`.
 Future<T> mutate<T>(WidgetRef ref, Future<T> Function() action) async {
   final r = await action();
   invalidateAllData(ref.invalidate);

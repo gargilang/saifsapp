@@ -13,7 +13,9 @@ android/app/build/
 local.properties
 
 # Web
-lib/generated_plugin_registrant.dart
+
+# Supabase CLI temp
+supabase/.temp/
 
 # IDE
 .idea/

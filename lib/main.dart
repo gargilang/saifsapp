@@ -6,7 +6,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
-import 'data/sync/background_sync.dart';
+import 'data/sync/background_sync.dart'
+    if (dart.library.html) 'data/sync/background_sync_web.dart';
 import 'data/sync/sync_controller.dart';
 
 Future<void> main() async {
