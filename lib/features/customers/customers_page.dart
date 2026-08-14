@@ -60,7 +60,7 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
             Expanded(
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: 'Cari nama customer...',
+                  hintText: 'Cari nama nasabah...',
                   prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
                 ),
                 onChanged: (v) => setState(() => _query = v),
@@ -101,9 +101,9 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
             error: (e, _) => EmptyState(message: 'Gagal memuat data: $e'),
             data: (rows) => rows.isEmpty
                 ? EmptyState(
-                    message: 'Belum ada customer.',
+                    message: 'Belum ada nasabah.',
                     actionLabel: _filter == CustomerFilter.semua && _query.isEmpty
-                        ? '+ Tambah Customer'
+                        ? '+ Tambah Nasabah'
                         : null,
                     onAction: _filter == CustomerFilter.semua && _query.isEmpty
                         ? () => Navigator.push(context,
@@ -159,10 +159,10 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                             trailing: IconButton(
                               icon: Icon(Icons.delete_outline,
                                   size: 20, color: cs.onSurfaceVariant),
-                              tooltip: 'Hapus customer',
+                              tooltip: 'Hapus nasabah',
                               onPressed: () async {
                                 if (await confirmDialog(context,
-                                    title: 'Hapus customer?',
+                                    title: 'Hapus nasabah?',
                                     message:
                                         'Data ${r.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
                                   await mutate(ref,

@@ -30,7 +30,7 @@ Future<Uint8List> buildStatementPdf(StatementData data, {required Uint8List logo
           pw.SizedBox(width: 12),
           pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
             pw.Text(kBrandName, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Kartu Piutang Customer',
+            pw.Text('Kartu Piutang Nasabah',
                 style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
           ]),
           pw.Spacer(),

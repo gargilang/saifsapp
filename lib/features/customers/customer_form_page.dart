@@ -64,7 +64,7 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.existing == null ? 'Tambah Customer' : 'Edit Customer')),
+          title: Text(widget.existing == null ? 'Tambah Nasabah' : 'Edit Nasabah')),
       body: Form(
         key: _formKey,
         child: ListView(padding: const EdgeInsets.all(16), children: [

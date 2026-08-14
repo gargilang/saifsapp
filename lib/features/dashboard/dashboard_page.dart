@@ -15,6 +15,7 @@ import '../../widgets/stat_card.dart';
 import '../customers/customer_form_page.dart';
 import '../payments/payment_form_page.dart';
 import '../purchases/purchase_form_page.dart';
+import '../settings/admin_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -28,43 +29,40 @@ class DashboardPage extends ConsumerWidget {
   Future<void> _pilihCustomerLalu(
     BuildContext context,
     WidgetRef ref,
-    Widget Function(String customerId) pageBuilder,
-  ) async {
-    final customers = await ref.read(repoProvider).customers();
+    Widget Function(String customerId) pageBuilder, {
+    bool filterBerUtang = false,
+  }) async {
+    final semua = await ref.read(repoProvider).customers();
     if (!context.mounted) return;
-    if (customers.isEmpty) {
+
+    final daftar = filterBerUtang
+        ? (semua..removeWhere((c) => c.sisa <= 0))
+        : semua;
+
+    if (daftar.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Belum ada customer. Tambah dulu.')),
+        SnackBar(
+          content: Text(filterBerUtang
+              ? 'Tidak ada nasabah yang masih punya utang.'
+              : 'Belum ada nasabah. Tambah dulu.'),
+        ),
       );
       return;
     }
-    final cs = Theme.of(context).colorScheme;
+
     final chosen = await showModalBottomSheet<Customer>(
       context: context,
-      backgroundColor: cs.surfaceContainer,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              'Pilih Customer',
-              style: Theme.of(ctx).textTheme.titleMedium,
-            ),
-          ),
-          for (final c in customers)
-            ListTile(
-              title: Text(c.customer.nama),
-              subtitle: Text('Sisa: ${formatRupiah(c.sisa)}'),
-              onTap: () => Navigator.pop(ctx, c.customer),
-            ),
-        ],
+      builder: (ctx) => _PilihNasabahSheet(
+        daftar: daftar,
+        filterBerUtang: filterBerUtang,
       ),
     );
+
     if (chosen != null && context.mounted) {
       await Navigator.push(
         context,
@@ -91,7 +89,10 @@ class DashboardPage extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               // ── Greeting ────────────────────────────────────────────────
-              Text('Halo, Admin 👋', style: textTheme.titleLarge),
+              Text(
+                'Halo, ${ref.watch(currentProfileProvider).valueOrNull?.split(' ').first ?? 'Admin'} 👋',
+                style: textTheme.titleLarge,
+              ),
               const SizedBox(height: 2),
               Text(tanggal, style: textTheme.bodyMedium),
               const SizedBox(height: 20),
@@ -155,6 +156,7 @@ class DashboardPage extends ConsumerWidget {
                             context,
                             ref,
                             (id) => PaymentFormPage(customerId: id),
+                            filterBerUtang: true,
                           ),
                         ),
                       ),
@@ -162,7 +164,7 @@ class DashboardPage extends ConsumerWidget {
                         width: tileWidth,
                         child: _QuickActionButton(
                           icon: Icons.person_add_outlined,
-                          label: 'Customer',
+                          label: 'Nasabah',
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const CustomerFormPage()),
@@ -425,7 +427,7 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text('dari $customerBerhutang customer berhutang', style: textTheme.bodyMedium),
+            Text('dari $customerBerhutang nasabah berhutang', style: textTheme.bodyMedium),
           ],
         ),
       ]),
@@ -483,6 +485,136 @@ class _TrendChart extends StatelessWidget {
           ),
         ],
       )),
+    );
+  }
+}
+
+// ── Sheet pilih nasabah dengan search ─────────────────────────────────────────
+class _PilihNasabahSheet extends StatefulWidget {
+  final List<CustomerWithBalance> daftar;
+  final bool filterBerUtang;
+  const _PilihNasabahSheet({required this.daftar, required this.filterBerUtang});
+
+  @override
+  State<_PilihNasabahSheet> createState() => _PilihNasabahSheetState();
+}
+
+class _PilihNasabahSheetState extends State<_PilihNasabahSheet> {
+  final _ctrl = TextEditingController();
+  List<CustomerWithBalance> _hasil = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _hasil = widget.daftar;
+    _ctrl.addListener(_filter);
+  }
+
+  void _filter() {
+    final q = _ctrl.text.trim().toLowerCase();
+    setState(() {
+      _hasil = q.isEmpty
+          ? widget.daftar
+          : widget.daftar
+              .where((c) => c.customer.nama.toLowerCase().contains(q))
+              .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      builder: (ctx, scroll) => Column(
+        children: [
+          // handle
+          Container(
+            width: 36, height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: Row(children: [
+              Expanded(
+                child: Text(
+                  widget.filterBerUtang ? 'Pilih Nasabah Berutang' : 'Pilih Nasabah',
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text('${_hasil.length} nasabah',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: TextField(
+              controller: _ctrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Cari nama nasabah...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _ctrl.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => _ctrl.clear(),
+                      )
+                    : null,
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: _hasil.isEmpty
+                ? Center(
+                    child: Text('Tidak ditemukan',
+                        style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  )
+                : ListView.builder(
+                    controller: scroll,
+                    itemCount: _hasil.length,
+                    itemBuilder: (_, i) {
+                      final c = _hasil[i];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: cs.primaryContainer,
+                          child: Text(
+                            c.customer.nama.isNotEmpty
+                                ? c.customer.nama[0].toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                                color: cs.primary, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        title: Text(c.customer.nama),
+                        subtitle: widget.filterBerUtang
+                            ? Text('Sisa: ${formatRupiah(c.sisa)}',
+                                style: TextStyle(color: cs.error))
+                            : null,
+                        onTap: () => Navigator.pop(ctx, c.customer),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

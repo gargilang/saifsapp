@@ -1,7 +1,7 @@
 import '../../core/utils/dates.dart';
 
 class Purchase {
-  final String id, customerId, namaBarang;
+  final String id, customerId, namaBarang, jenis;
   final int hargaJual;
   final int? hargaBeli;
   final DateTime tanggalBeli; // date-only
@@ -13,6 +13,7 @@ class Purchase {
     required this.id,
     required this.customerId,
     required this.namaBarang,
+    this.jenis = 'barang',
     required this.hargaJual,
     this.hargaBeli,
     required this.tanggalBeli,
@@ -27,6 +28,7 @@ class Purchase {
         id: j['id'] as String,
         customerId: j['customer_id'] as String,
         namaBarang: j['nama_barang'] as String,
+        jenis: (j['jenis'] as String?) ?? 'barang',
         hargaJual: (j['harga_jual'] as num).toInt(),
         hargaBeli: (j['harga_beli'] as num?)?.toInt(),
         tanggalBeli: DateTime.parse(j['tanggal_beli'] as String),
@@ -41,6 +43,7 @@ class Purchase {
         'id': id,
         'customer_id': customerId,
         'nama_barang': namaBarang,
+        'jenis': jenis,
         'harga_jual': hargaJual,
         'harga_beli': hargaBeli,
         'tanggal_beli': dateOnly(tanggalBeli),
@@ -52,7 +55,7 @@ class Purchase {
       };
 
   Purchase copyWith({
-    String? namaBarang, int? hargaJual, int? Function()? hargaBeli,
+    String? namaBarang, String? jenis, int? hargaJual, int? Function()? hargaBeli,
     DateTime? tanggalBeli, String? catatan, String? createdBy,
     DateTime? updatedAt, DateTime? deletedAt,
   }) =>
@@ -60,6 +63,7 @@ class Purchase {
         id: id,
         customerId: customerId,
         namaBarang: namaBarang ?? this.namaBarang,
+        jenis: jenis ?? this.jenis,
         hargaJual: hargaJual ?? this.hargaJual,
         hargaBeli: hargaBeli != null ? hargaBeli() : this.hargaBeli,
         tanggalBeli: tanggalBeli ?? this.tanggalBeli,

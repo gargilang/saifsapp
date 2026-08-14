@@ -12,12 +12,17 @@ import '../../core/utils/dates.dart';
 import '../../data/sync/sync_controller.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../auth/auth_controller.dart';
+import 'admin_list_page.dart';
+import 'admin_providers.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
-  String _inisial(String email) =>
-      email.isNotEmpty ? email[0].toUpperCase() : '?';
+  String _inisial(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,6 +32,8 @@ class SettingsPage extends ConsumerWidget {
     final sync = ref.watch(syncControllerProvider);
     final template = ref.watch(waTemplateProvider);
     final pin = ref.watch(pinLockProvider);
+    final displayName = ref.watch(currentProfileProvider).valueOrNull ?? '';
+    final namaAtauEmail = displayName.isNotEmpty ? displayName : email;
     return ListView(padding: const EdgeInsets.all(16), children: [
       // ── Profil ────────────────────────────────────────────────────────────
       Card(
@@ -36,7 +43,7 @@ class SettingsPage extends ConsumerWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: cs.primaryContainer,
-              child: Text(_inisial(email),
+              child: Text(_inisial(namaAtauEmail),
                   style: TextStyle(
                       color: cs.primary,
                       fontWeight: FontWeight.w700,
@@ -47,12 +54,12 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(email,
+                    Text(namaAtauEmail,
                         style: Theme.of(context)
                             .textTheme
                             .bodyLarge
                             ?.copyWith(fontWeight: FontWeight.w600)),
-                    Text('Admin',
+                    Text('Admin · $email',
                         style: Theme.of(context).textTheme.bodyMedium),
                   ]),
             ),
@@ -117,6 +124,21 @@ class SettingsPage extends ConsumerWidget {
             },
           ),
         ]),
+      ),
+      const SizedBox(height: 16),
+
+      // ── Manajemen Admin ───────────────────────────────────────────────────
+      Card(
+        child: ListTile(
+          leading: Icon(Icons.manage_accounts_outlined, color: cs.onSurfaceVariant),
+          title: const Text('Kelola Admin'),
+          subtitle: const Text('Tambah atau hapus akun admin'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminListPage()),
+          ),
+        ),
       ),
       const SizedBox(height: 16),
 

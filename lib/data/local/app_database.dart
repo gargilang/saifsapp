@@ -32,6 +32,7 @@ class Purchases extends Table {
   TextColumn get id => text()();
   TextColumn get customerId => text()();
   TextColumn get namaBarang => text()();
+  TextColumn get jenis => text().withDefault(const Constant('barang'))();
   IntColumn get hargaJual => integer()();
   IntColumn get hargaBeli => integer().nullable()();
   DateTimeColumn get tanggalBeli => dateTime()();
@@ -88,7 +89,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(purchases, purchases.jenis);
+          }
+        },
+      );
 
   // ---- customers ----
   Future<List<CustomerRow>> activeCustomers() =>
@@ -197,16 +207,16 @@ extension CustomerX on Customer {
 
 extension PurchaseRowX on PurchaseRow {
   Purchase toModel() => Purchase(
-      id: id, customerId: customerId, namaBarang: namaBarang, hargaJual: hargaJual,
-      hargaBeli: hargaBeli, tanggalBeli: tanggalBeli, catatan: catatan,
-      createdBy: createdBy, createdAt: createdAt, updatedAt: updatedAt,
-      deletedAt: deletedAt);
+      id: id, customerId: customerId, namaBarang: namaBarang, jenis: jenis,
+      hargaJual: hargaJual, hargaBeli: hargaBeli, tanggalBeli: tanggalBeli,
+      catatan: catatan, createdBy: createdBy, createdAt: createdAt,
+      updatedAt: updatedAt, deletedAt: deletedAt);
 }
 
 extension PurchaseX on Purchase {
   PurchasesCompanion toCompanion({required bool dirty}) => PurchasesCompanion(
       id: Value(id), customerId: Value(customerId), namaBarang: Value(namaBarang),
-      hargaJual: Value(hargaJual), hargaBeli: Value(hargaBeli),
+      jenis: Value(jenis), hargaJual: Value(hargaJual), hargaBeli: Value(hargaBeli),
       tanggalBeli: Value(tanggalBeli), catatan: Value(catatan),
       createdBy: Value(createdBy), createdAt: Value(createdAt),
       updatedAt: Value(updatedAt), deletedAt: Value(deletedAt),

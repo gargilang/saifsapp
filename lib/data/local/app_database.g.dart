@@ -751,6 +751,16 @@ class $PurchasesTable extends Purchases
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _jenisMeta = const VerificationMeta('jenis');
+  @override
+  late final GeneratedColumn<String> jenis = GeneratedColumn<String>(
+    'jenis',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('barang'),
+  );
   static const VerificationMeta _hargaJualMeta = const VerificationMeta(
     'hargaJual',
   );
@@ -859,6 +869,7 @@ class $PurchasesTable extends Purchases
     id,
     customerId,
     namaBarang,
+    jenis,
     hargaJual,
     hargaBeli,
     tanggalBeli,
@@ -901,6 +912,12 @@ class $PurchasesTable extends Purchases
       );
     } else if (isInserting) {
       context.missing(_namaBarangMeta);
+    }
+    if (data.containsKey('jenis')) {
+      context.handle(
+        _jenisMeta,
+        jenis.isAcceptableOrUnknown(data['jenis']!, _jenisMeta),
+      );
     }
     if (data.containsKey('harga_jual')) {
       context.handle(
@@ -988,6 +1005,10 @@ class $PurchasesTable extends Purchases
         DriftSqlType.string,
         data['${effectivePrefix}nama_barang'],
       )!,
+      jenis: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}jenis'],
+      )!,
       hargaJual: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}harga_jual'],
@@ -1037,6 +1058,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
   final String id;
   final String customerId;
   final String namaBarang;
+  final String jenis;
   final int hargaJual;
   final int? hargaBeli;
   final DateTime tanggalBeli;
@@ -1050,6 +1072,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     required this.id,
     required this.customerId,
     required this.namaBarang,
+    required this.jenis,
     required this.hargaJual,
     this.hargaBeli,
     required this.tanggalBeli,
@@ -1066,6 +1089,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     map['id'] = Variable<String>(id);
     map['customer_id'] = Variable<String>(customerId);
     map['nama_barang'] = Variable<String>(namaBarang);
+    map['jenis'] = Variable<String>(jenis);
     map['harga_jual'] = Variable<int>(hargaJual);
     if (!nullToAbsent || hargaBeli != null) {
       map['harga_beli'] = Variable<int>(hargaBeli);
@@ -1091,6 +1115,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       id: Value(id),
       customerId: Value(customerId),
       namaBarang: Value(namaBarang),
+      jenis: Value(jenis),
       hargaJual: Value(hargaJual),
       hargaBeli: hargaBeli == null && nullToAbsent
           ? const Value.absent()
@@ -1120,6 +1145,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       id: serializer.fromJson<String>(json['id']),
       customerId: serializer.fromJson<String>(json['customerId']),
       namaBarang: serializer.fromJson<String>(json['namaBarang']),
+      jenis: serializer.fromJson<String>(json['jenis']),
       hargaJual: serializer.fromJson<int>(json['hargaJual']),
       hargaBeli: serializer.fromJson<int?>(json['hargaBeli']),
       tanggalBeli: serializer.fromJson<DateTime>(json['tanggalBeli']),
@@ -1138,6 +1164,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       'id': serializer.toJson<String>(id),
       'customerId': serializer.toJson<String>(customerId),
       'namaBarang': serializer.toJson<String>(namaBarang),
+      'jenis': serializer.toJson<String>(jenis),
       'hargaJual': serializer.toJson<int>(hargaJual),
       'hargaBeli': serializer.toJson<int?>(hargaBeli),
       'tanggalBeli': serializer.toJson<DateTime>(tanggalBeli),
@@ -1154,6 +1181,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     String? id,
     String? customerId,
     String? namaBarang,
+    String? jenis,
     int? hargaJual,
     Value<int?> hargaBeli = const Value.absent(),
     DateTime? tanggalBeli,
@@ -1167,6 +1195,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
     namaBarang: namaBarang ?? this.namaBarang,
+    jenis: jenis ?? this.jenis,
     hargaJual: hargaJual ?? this.hargaJual,
     hargaBeli: hargaBeli.present ? hargaBeli.value : this.hargaBeli,
     tanggalBeli: tanggalBeli ?? this.tanggalBeli,
@@ -1186,6 +1215,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       namaBarang: data.namaBarang.present
           ? data.namaBarang.value
           : this.namaBarang,
+      jenis: data.jenis.present ? data.jenis.value : this.jenis,
       hargaJual: data.hargaJual.present ? data.hargaJual.value : this.hargaJual,
       hargaBeli: data.hargaBeli.present ? data.hargaBeli.value : this.hargaBeli,
       tanggalBeli: data.tanggalBeli.present
@@ -1206,6 +1236,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('namaBarang: $namaBarang, ')
+          ..write('jenis: $jenis, ')
           ..write('hargaJual: $hargaJual, ')
           ..write('hargaBeli: $hargaBeli, ')
           ..write('tanggalBeli: $tanggalBeli, ')
@@ -1224,6 +1255,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     id,
     customerId,
     namaBarang,
+    jenis,
     hargaJual,
     hargaBeli,
     tanggalBeli,
@@ -1241,6 +1273,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
           other.id == this.id &&
           other.customerId == this.customerId &&
           other.namaBarang == this.namaBarang &&
+          other.jenis == this.jenis &&
           other.hargaJual == this.hargaJual &&
           other.hargaBeli == this.hargaBeli &&
           other.tanggalBeli == this.tanggalBeli &&
@@ -1256,6 +1289,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
   final Value<String> id;
   final Value<String> customerId;
   final Value<String> namaBarang;
+  final Value<String> jenis;
   final Value<int> hargaJual;
   final Value<int?> hargaBeli;
   final Value<DateTime> tanggalBeli;
@@ -1270,6 +1304,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
     this.namaBarang = const Value.absent(),
+    this.jenis = const Value.absent(),
     this.hargaJual = const Value.absent(),
     this.hargaBeli = const Value.absent(),
     this.tanggalBeli = const Value.absent(),
@@ -1285,6 +1320,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     required String id,
     required String customerId,
     required String namaBarang,
+    this.jenis = const Value.absent(),
     required int hargaJual,
     this.hargaBeli = const Value.absent(),
     required DateTime tanggalBeli,
@@ -1306,6 +1342,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     Expression<String>? id,
     Expression<String>? customerId,
     Expression<String>? namaBarang,
+    Expression<String>? jenis,
     Expression<int>? hargaJual,
     Expression<int>? hargaBeli,
     Expression<DateTime>? tanggalBeli,
@@ -1321,6 +1358,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
       if (namaBarang != null) 'nama_barang': namaBarang,
+      if (jenis != null) 'jenis': jenis,
       if (hargaJual != null) 'harga_jual': hargaJual,
       if (hargaBeli != null) 'harga_beli': hargaBeli,
       if (tanggalBeli != null) 'tanggal_beli': tanggalBeli,
@@ -1338,6 +1376,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     Value<String>? id,
     Value<String>? customerId,
     Value<String>? namaBarang,
+    Value<String>? jenis,
     Value<int>? hargaJual,
     Value<int?>? hargaBeli,
     Value<DateTime>? tanggalBeli,
@@ -1353,6 +1392,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
       namaBarang: namaBarang ?? this.namaBarang,
+      jenis: jenis ?? this.jenis,
       hargaJual: hargaJual ?? this.hargaJual,
       hargaBeli: hargaBeli ?? this.hargaBeli,
       tanggalBeli: tanggalBeli ?? this.tanggalBeli,
@@ -1377,6 +1417,9 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     }
     if (namaBarang.present) {
       map['nama_barang'] = Variable<String>(namaBarang.value);
+    }
+    if (jenis.present) {
+      map['jenis'] = Variable<String>(jenis.value);
     }
     if (hargaJual.present) {
       map['harga_jual'] = Variable<int>(hargaJual.value);
@@ -1417,6 +1460,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('namaBarang: $namaBarang, ')
+          ..write('jenis: $jenis, ')
           ..write('hargaJual: $hargaJual, ')
           ..write('hargaBeli: $hargaBeli, ')
           ..write('tanggalBeli: $tanggalBeli, ')
@@ -3264,6 +3308,7 @@ typedef $$PurchasesTableCreateCompanionBuilder =
       required String id,
       required String customerId,
       required String namaBarang,
+      Value<String> jenis,
       required int hargaJual,
       Value<int?> hargaBeli,
       required DateTime tanggalBeli,
@@ -3280,6 +3325,7 @@ typedef $$PurchasesTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> customerId,
       Value<String> namaBarang,
+      Value<String> jenis,
       Value<int> hargaJual,
       Value<int?> hargaBeli,
       Value<DateTime> tanggalBeli,
@@ -3313,6 +3359,11 @@ class $$PurchasesTableFilterComposer
 
   ColumnFilters<String> get namaBarang => $composableBuilder(
     column: $table.namaBarang,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get jenis => $composableBuilder(
+    column: $table.jenis,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3386,6 +3437,11 @@ class $$PurchasesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get jenis => $composableBuilder(
+    column: $table.jenis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get hargaJual => $composableBuilder(
     column: $table.hargaJual,
     builder: (column) => ColumnOrderings(column),
@@ -3454,6 +3510,9 @@ class $$PurchasesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get jenis =>
+      $composableBuilder(column: $table.jenis, builder: (column) => column);
+
   GeneratedColumn<int> get hargaJual =>
       $composableBuilder(column: $table.hargaJual, builder: (column) => column);
 
@@ -3518,6 +3577,7 @@ class $$PurchasesTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> customerId = const Value.absent(),
                 Value<String> namaBarang = const Value.absent(),
+                Value<String> jenis = const Value.absent(),
                 Value<int> hargaJual = const Value.absent(),
                 Value<int?> hargaBeli = const Value.absent(),
                 Value<DateTime> tanggalBeli = const Value.absent(),
@@ -3532,6 +3592,7 @@ class $$PurchasesTableTableManager
                 id: id,
                 customerId: customerId,
                 namaBarang: namaBarang,
+                jenis: jenis,
                 hargaJual: hargaJual,
                 hargaBeli: hargaBeli,
                 tanggalBeli: tanggalBeli,
@@ -3548,6 +3609,7 @@ class $$PurchasesTableTableManager
                 required String id,
                 required String customerId,
                 required String namaBarang,
+                Value<String> jenis = const Value.absent(),
                 required int hargaJual,
                 Value<int?> hargaBeli = const Value.absent(),
                 required DateTime tanggalBeli,
@@ -3562,6 +3624,7 @@ class $$PurchasesTableTableManager
                 id: id,
                 customerId: customerId,
                 namaBarang: namaBarang,
+                jenis: jenis,
                 hargaJual: hargaJual,
                 hargaBeli: hargaBeli,
                 tanggalBeli: tanggalBeli,

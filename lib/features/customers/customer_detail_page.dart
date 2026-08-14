@@ -85,7 +85,7 @@ class CustomerDetailPage extends ConsumerWidget {
                                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                                       Icon(Icons.star_rounded, size: 12, color: cs.primary),
                                       const SizedBox(width: 4),
-                                      Text('Customer Setia',
+                                      Text('Nasabah Setia',
                                           style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w700,
@@ -112,7 +112,7 @@ class CustomerDetailPage extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit customer',
+                  tooltip: 'Edit nasabah',
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -121,10 +121,10 @@ class CustomerDetailPage extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Hapus customer',
+                  tooltip: 'Hapus nasabah',
                   onPressed: () async {
                     if (await confirmDialog(context,
-                        title: 'Hapus customer?',
+                        title: 'Hapus nasabah?',
                         message:
                             'Data ${d.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
                       await mutate(
@@ -197,7 +197,7 @@ class CustomerDetailPage extends ConsumerWidget {
                         Row(children: [
                           Expanded(
                               child: _InfoItem(
-                                  label: 'Customer Sejak',
+                                  label: 'Nasabah Sejak',
                                   value: d.stats.customerSejak != null
                                       ? tampilTanggal(d.stats.customerSejak!)
                                       : '-')),
