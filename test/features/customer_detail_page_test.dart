@@ -38,9 +38,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('badge Customer Setia muncul untuk >= 3 transaksi + 360 section', (tester) async {
+  testWidgets('badge Nasabah Setia muncul untuk >= 3 transaksi + 360 section', (tester) async {
     await pump(tester, makeRepo());
-    expect(find.text('Customer Setia'), findsOneWidget);
+    expect(find.text('Nasabah Setia'), findsOneWidget);
     await tester.dragUntilVisible(
         find.text('RINGKASAN CUSTOMER'), find.byType(CustomScrollView), const Offset(0, -300));
     expect(find.text('RINGKASAN CUSTOMER'), findsOneWidget);

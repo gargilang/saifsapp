@@ -24,7 +24,7 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
           : formatRupiah(widget.existing!.jumlah).replaceFirst('Rp ', ''));
   late final _catatan = TextEditingController(text: widget.existing?.catatan);
   late DateTime _tanggal = widget.existing?.tanggalBayar ?? today();
-  late String _metode = widget.existing?.metode ?? 'tunai';
+  late String _metode = widget.existing?.metode ?? 'transfer';
   bool _saving = false;
 
   @override
@@ -32,10 +32,6 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
     _jumlah.dispose();
     _catatan.dispose();
     super.dispose();
-  }
-
-  void _setJumlah(int v) {
-    _jumlah.text = formatRupiah(v).replaceFirst('Rp ', '');
   }
 
   Future<void> _save() async {
@@ -76,20 +72,6 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
             validator: (v) =>
                 parseRupiah(v ?? '') <= 0 ? 'Jumlah harus lebih dari 0' : null,
           ),
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, children: [
-            for (final (label, nilai) in [
-              ('50rb', 50000),
-              ('100rb', 100000),
-              ('200rb', 200000),
-              ('500rb', 500000),
-            ])
-              ActionChip(
-                label: Text(label),
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                onPressed: () => _setJumlah(nilai),
-              ),
-          ]),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _metode,
@@ -99,7 +81,7 @@ class _PaymentFormPageState extends ConsumerState<PaymentFormPage> {
               DropdownMenuItem(value: 'transfer', child: Text('Transfer')),
               DropdownMenuItem(value: 'lainnya', child: Text('Lainnya')),
             ],
-            onChanged: (v) => setState(() => _metode = v ?? 'tunai'),
+            onChanged: (v) => setState(() => _metode = v ?? 'transfer'),
           ),
           const SizedBox(height: 12),
           FilledButton.tonal(

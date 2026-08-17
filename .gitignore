@@ -26,3 +26,4 @@ supabase/.temp/
 # Secrets: kredensial Supabase hanya via --dart-define, jangan pernah commit file env
 .env
 *.env
+.vercel

@@ -123,15 +123,31 @@ class CustomerDetailPage extends ConsumerWidget {
                   icon: const Icon(Icons.delete_outline),
                   tooltip: 'Hapus nasabah',
                   onPressed: () async {
+                    final jumlahTransaksi = d.items.length;
+                    final jumlahPembayaran = d.payments.length;
+                    final totalHutang = d.balance.totalHutang;
+                    final totalBayar = d.balance.totalBayar;
+
+                    final pesan = StringBuffer()
+                      ..writeln('Nasabah: ${d.customer.nama}')
+                      ..writeln()
+                      ..writeln('Data berikut akan ikut dihapus:')
+                      ..writeln('• $jumlahTransaksi transaksi')
+                      ..writeln('• $jumlahPembayaran pembayaran')
+                      ..writeln()
+                      ..writeln('Total hutang: ${formatRupiah(totalHutang)}')
+                      ..writeln('Total bayar: ${formatRupiah(totalBayar)}')
+                      ..writeln()
+                      ..write('Semua data tetap tersimpan dan bisa dipulihkan jika diperlukan.');
+
                     if (await confirmDialog(context,
-                        title: 'Hapus nasabah?',
-                        message:
-                            'Data ${d.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
+                        title: 'Hapus nasabah beserta semua datanya?',
+                        message: pesan.toString())) {
                       await mutate(
                           ref,
                           () => ref
                               .read(repoProvider)
-                              .deleteCustomer(customerId));
+                              .deleteCustomerCascade(customerId));
                       if (context.mounted) context.pop();
                     }
                   },

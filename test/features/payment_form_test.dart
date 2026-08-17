@@ -20,14 +20,6 @@ void main() {
         child: const MaterialApp(home: PaymentFormPage(customerId: 'c1')),
       ));
 
-  testWidgets('chip nominal cepat mengisi field terformat', (tester) async {
-    await pump(tester, FakeBackend());
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('100rb'));
-    await tester.pump();
-    expect(find.text('100.000'), findsOneWidget);
-  });
-
   testWidgets('jumlah 0 ditolak validasi', (tester) async {
     await pump(tester, FakeBackend());
     await tester.pumpAndSettle();
@@ -40,11 +32,19 @@ void main() {
     final backend = FakeBackend();
     await pump(tester, backend);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('200rb'));
-    await tester.pump();
+    await tester.enterText(find.byType(TextFormField).first, '200.000');
     await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(backend.payments.single.jumlah, 200000);
     expect(backend.payments.single.customerId, 'c1');
+  });
+
+  testWidgets('metode default adalah Transfer', (tester) async {
+    await pump(tester, FakeBackend());
+    await tester.pumpAndSettle();
+    // Cari dropdown dan verifikasi nilai default
+    final dropdown = tester.widget<DropdownButtonFormField<String>>(
+        find.byType(DropdownButtonFormField<String>));
+    expect(dropdown.initialValue, 'transfer');
   });
 }

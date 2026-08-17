@@ -27,6 +27,29 @@ class FakeRemoteStore implements RemoteStore {
   }
 
   @override
+  Future<void> update(String table, String id, Map<String, dynamic> values) async {
+    final t = tables.putIfAbsent(table, () => {});
+    final existing = t[id];
+    if (existing == null) return; // row tidak ada: no-op (0 rows affected)
+    t[id] = {...existing, ...values, 'updated_at': clock().toIso8601String()};
+  }
+
+  @override
+  Future<void> updateByCustomer(
+      String table, String customerId, Map<String, dynamic> values) async {
+    final t = tables.putIfAbsent(table, () => {});
+    for (final entry in t.entries.toList()) {
+      if (entry.value['customer_id'] == customerId) {
+        t[entry.key] = {
+          ...entry.value,
+          ...values,
+          'updated_at': clock().toIso8601String(),
+        };
+      }
+    }
+  }
+
+  @override
   Future<Map<String, dynamic>> callFunction(
     String name, {
     String method = 'POST',

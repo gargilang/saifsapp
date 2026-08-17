@@ -37,16 +37,32 @@ class RemoteBackend implements Backend {
   Future<void> writeBudgetEntry(BudgetEntry v) =>
       remote.upsert('budget_entries', [v.toJson()]);
 
-  Future<void> _delete(String table, String id, DateTime at) => remote.upsert(table, [
-        {
-          'id': id,
-          'deleted_at': at.toIso8601String(),
-          'updated_at': at.toIso8601String(),
-        }
-      ]);
+  /// Soft delete: UPDATE saja, jangan upsert.
+  /// Upsert dengan payload parsial bisa berubah jadi INSERT kalau row tidak
+  /// ditemukan (mis. karena RLS), lalu gagal karena kolom NOT NULL lain
+  /// (mis. `nama`) tidak disertakan.
+  Future<void> _delete(String table, String id, DateTime at) =>
+      remote.update(table, id, {
+        'deleted_at': at.toIso8601String(),
+        'updated_at': at.toIso8601String(),
+      });
 
   @override
   Future<void> deleteCustomer(String id, DateTime at) => _delete('customers', id, at);
+
+  @override
+  Future<void> deleteCustomerCascade(String id, DateTime at) async {
+    await _delete('customers', id, at);
+    await remote.updateByCustomer('purchases', id, {
+      'deleted_at': at.toIso8601String(),
+      'updated_at': at.toIso8601String(),
+    });
+    await remote.updateByCustomer('payments', id, {
+      'deleted_at': at.toIso8601String(),
+      'updated_at': at.toIso8601String(),
+    });
+  }
+
   @override
   Future<void> deletePurchase(String id, DateTime at) => _delete('purchases', id, at);
   @override

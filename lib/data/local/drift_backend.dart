@@ -36,6 +36,14 @@ class DriftBackend implements Backend {
   @override
   Future<void> deleteCustomer(String id, DateTime at) =>
       db.softDeleteCustomerRow(id, at);
+
+  @override
+  Future<void> deleteCustomerCascade(String id, DateTime at) async {
+    await db.softDeleteCustomerRow(id, at);
+    await db.softDeletePurchasesByCustomer(id, at);
+    await db.softDeletePaymentsByCustomer(id, at);
+  }
+
   @override
   Future<void> deletePurchase(String id, DateTime at) =>
       db.softDeletePurchaseRow(id, at);

@@ -161,12 +161,18 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                                   size: 20, color: cs.onSurfaceVariant),
                               tooltip: 'Hapus nasabah',
                               onPressed: () async {
+                                final pesan = StringBuffer()
+                                  ..writeln('Nasabah: ${r.customer.nama}')
+                                  ..writeln()
+                                  ..writeln('Semua transaksi dan pembayaran nasabah ini juga akan ikut dihapus.')
+                                  ..writeln()
+                                  ..write('Data tetap tersimpan dan bisa dipulihkan jika diperlukan.');
+
                                 if (await confirmDialog(context,
-                                    title: 'Hapus nasabah?',
-                                    message:
-                                        'Data ${r.customer.nama} disembunyikan (bisa dipulihkan lewat database).')) {
+                                    title: 'Hapus nasabah beserta semua datanya?',
+                                    message: pesan.toString())) {
                                   await mutate(ref,
-                                      () => ref.read(repoProvider).deleteCustomer(r.customer.id));
+                                      () => ref.read(repoProvider).deleteCustomerCascade(r.customer.id));
                                 }
                               },
                             ),

@@ -2363,6 +2363,29 @@ class $BudgetEntriesTable extends BudgetEntries
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('manual'),
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2420,6 +2443,8 @@ class $BudgetEntriesTable extends BudgetEntries
     jumlah,
     catatan,
     createdBy,
+    sourceType,
+    sourceId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2489,6 +2514,18 @@ class $BudgetEntriesTable extends BudgetEntries
         createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
       );
     }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2554,6 +2591,14 @@ class $BudgetEntriesTable extends BudgetEntries
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
       ),
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2587,6 +2632,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
   final int jumlah;
   final String? catatan;
   final String? createdBy;
+  final String sourceType;
+  final String? sourceId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -2599,6 +2646,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
     required this.jumlah,
     this.catatan,
     this.createdBy,
+    required this.sourceType,
+    this.sourceId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -2617,6 +2666,10 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
     }
     if (!nullToAbsent || createdBy != null) {
       map['created_by'] = Variable<String>(createdBy);
+    }
+    map['source_type'] = Variable<String>(sourceType);
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<String>(sourceId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2640,6 +2693,10 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
       createdBy: createdBy == null && nullToAbsent
           ? const Value.absent()
           : Value(createdBy),
+      sourceType: Value(sourceType),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -2662,6 +2719,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
       jumlah: serializer.fromJson<int>(json['jumlah']),
       catatan: serializer.fromJson<String?>(json['catatan']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
+      sourceType: serializer.fromJson<String>(json['sourceType']),
+      sourceId: serializer.fromJson<String?>(json['sourceId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -2679,6 +2738,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
       'jumlah': serializer.toJson<int>(jumlah),
       'catatan': serializer.toJson<String?>(catatan),
       'createdBy': serializer.toJson<String?>(createdBy),
+      'sourceType': serializer.toJson<String>(sourceType),
+      'sourceId': serializer.toJson<String?>(sourceId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -2694,6 +2755,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
     int? jumlah,
     Value<String?> catatan = const Value.absent(),
     Value<String?> createdBy = const Value.absent(),
+    String? sourceType,
+    Value<String?> sourceId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -2706,6 +2769,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
     jumlah: jumlah ?? this.jumlah,
     catatan: catatan.present ? catatan.value : this.catatan,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    sourceType: sourceType ?? this.sourceType,
+    sourceId: sourceId.present ? sourceId.value : this.sourceId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -2722,6 +2787,10 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
       jumlah: data.jumlah.present ? data.jumlah.value : this.jumlah,
       catatan: data.catatan.present ? data.catatan.value : this.catatan,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2739,6 +2808,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
           ..write('jumlah: $jumlah, ')
           ..write('catatan: $catatan, ')
           ..write('createdBy: $createdBy, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -2756,6 +2827,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
     jumlah,
     catatan,
     createdBy,
+    sourceType,
+    sourceId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2772,6 +2845,8 @@ class BudgetEntryRow extends DataClass implements Insertable<BudgetEntryRow> {
           other.jumlah == this.jumlah &&
           other.catatan == this.catatan &&
           other.createdBy == this.createdBy &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -2786,6 +2861,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
   final Value<int> jumlah;
   final Value<String?> catatan;
   final Value<String?> createdBy;
+  final Value<String> sourceType;
+  final Value<String?> sourceId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -2799,6 +2876,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
     this.jumlah = const Value.absent(),
     this.catatan = const Value.absent(),
     this.createdBy = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -2813,6 +2892,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
     required int jumlah,
     this.catatan = const Value.absent(),
     this.createdBy = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -2833,6 +2914,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
     Expression<int>? jumlah,
     Expression<String>? catatan,
     Expression<String>? createdBy,
+    Expression<String>? sourceType,
+    Expression<String>? sourceId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -2847,6 +2930,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
       if (jumlah != null) 'jumlah': jumlah,
       if (catatan != null) 'catatan': catatan,
       if (createdBy != null) 'created_by': createdBy,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -2863,6 +2948,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
     Value<int>? jumlah,
     Value<String?>? catatan,
     Value<String?>? createdBy,
+    Value<String>? sourceType,
+    Value<String?>? sourceId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -2877,6 +2964,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
       jumlah: jumlah ?? this.jumlah,
       catatan: catatan ?? this.catatan,
       createdBy: createdBy ?? this.createdBy,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -2909,6 +2998,12 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2937,6 +3032,8 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
           ..write('jumlah: $jumlah, ')
           ..write('catatan: $catatan, ')
           ..write('createdBy: $createdBy, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -4046,6 +4143,8 @@ typedef $$BudgetEntriesTableCreateCompanionBuilder =
       required int jumlah,
       Value<String?> catatan,
       Value<String?> createdBy,
+      Value<String> sourceType,
+      Value<String?> sourceId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -4061,6 +4160,8 @@ typedef $$BudgetEntriesTableUpdateCompanionBuilder =
       Value<int> jumlah,
       Value<String?> catatan,
       Value<String?> createdBy,
+      Value<String> sourceType,
+      Value<String?> sourceId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -4109,6 +4210,16 @@ class $$BudgetEntriesTableFilterComposer
 
   ColumnFilters<String> get createdBy => $composableBuilder(
     column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4177,6 +4288,16 @@ class $$BudgetEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4230,6 +4351,14 @@ class $$BudgetEntriesTableAnnotationComposer
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -4281,6 +4410,8 @@ class $$BudgetEntriesTableTableManager
                 Value<int> jumlah = const Value.absent(),
                 Value<String?> catatan = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
+                Value<String> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4294,6 +4425,8 @@ class $$BudgetEntriesTableTableManager
                 jumlah: jumlah,
                 catatan: catatan,
                 createdBy: createdBy,
+                sourceType: sourceType,
+                sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4309,6 +4442,8 @@ class $$BudgetEntriesTableTableManager
                 required int jumlah,
                 Value<String?> catatan = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
+                Value<String> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4322,6 +4457,8 @@ class $$BudgetEntriesTableTableManager
                 jumlah: jumlah,
                 catatan: catatan,
                 createdBy: createdBy,
+                sourceType: sourceType,
+                sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

@@ -214,19 +214,38 @@ class AppRepository {
 
   Future<void> saveCustomer(Customer v) => _write(() => backend.writeCustomer(
       v.copyWith(createdBy: v.createdBy ?? currentUserId(), updatedAt: _now())));
-  Future<void> savePurchase(Purchase v) => _write(() => backend.writePurchase(
-      v.copyWith(createdBy: v.createdBy ?? currentUserId(), updatedAt: _now())));
-  Future<void> savePayment(Payment v) => _write(() => backend.writePayment(
-      v.copyWith(createdBy: v.createdBy ?? currentUserId(), updatedAt: _now())));
+  Future<void> savePurchase(Purchase v) => _write(() async {
+    final now = _now();
+    final userId = currentUserId();
+    await backend.writePurchase(
+        v.copyWith(createdBy: v.createdBy ?? userId, updatedAt: now));
+    await _syncBudgetFromPurchase(v, now, userId);
+  });
+  Future<void> savePayment(Payment v) => _write(() async {
+    final now = _now();
+    final userId = currentUserId();
+    await backend.writePayment(
+        v.copyWith(createdBy: v.createdBy ?? userId, updatedAt: now));
+    await _syncBudgetFromPayment(v, now, userId);
+  });
   Future<void> saveBudgetEntry(BudgetEntry v) => _write(() => backend.writeBudgetEntry(
       v.copyWith(createdBy: v.createdBy ?? currentUserId(), updatedAt: _now())));
 
   Future<void> deleteCustomer(String id) =>
       _write(() => backend.deleteCustomer(id, _now()));
+  /// Soft delete nasabah + semua transaksi & pembayarannya.
+  Future<void> deleteCustomerCascade(String id) =>
+      _write(() => backend.deleteCustomerCascade(id, _now()));
   Future<void> deletePurchase(String id) =>
-      _write(() => backend.deletePurchase(id, _now()));
+      _write(() async {
+        await backend.deletePurchase(id, _now());
+        await _deleteBudgetBySource('purchase', id, _now());
+      });
   Future<void> deletePayment(String id) =>
-      _write(() => backend.deletePayment(id, _now()));
+      _write(() async {
+        await backend.deletePayment(id, _now());
+        await _deleteBudgetBySource('payment', id, _now());
+      });
   Future<void> deleteBudgetEntry(String id) =>
       _write(() => backend.deleteBudgetEntry(id, _now()));
 
@@ -234,5 +253,63 @@ class AppRepository {
     final r = await action();
     onLocalWrite?.call();
     return r;
+  }
+
+  // ---- budget auto-sync helpers ----
+
+  Future<void> _syncBudgetFromPurchase(
+      Purchase p, DateTime now, String? userId) async {
+    // Hapus budget lama jika ada (untuk handle edit)
+    await _deleteBudgetBySource('purchase', p.id, now);
+    // Buat entry baru
+    final entry = BudgetEntry(
+      id: 'budget-purchase-${p.id}',
+      tanggal: p.tanggalBeli,
+      namaTransaksi: '${await _namaCustomer(p.customerId)} - ${p.namaBarang}',
+      tipe: 'pengeluaran',
+      jumlah: p.hargaJual,
+      createdBy: userId,
+      sourceType: 'purchase',
+      sourceId: p.id,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await backend.writeBudgetEntry(entry);
+  }
+
+  Future<void> _syncBudgetFromPayment(
+      Payment p, DateTime now, String? userId) async {
+    // Hapus budget lama jika ada (untuk handle edit)
+    await _deleteBudgetBySource('payment', p.id, now);
+    // Buat entry baru
+    final entry = BudgetEntry(
+      id: 'budget-payment-${p.id}',
+      tanggal: p.tanggalBayar,
+      namaTransaksi: '${await _namaCustomer(p.customerId)} - Pembayaran',
+      tipe: 'pemasukan',
+      jumlah: p.jumlah,
+      createdBy: userId,
+      sourceType: 'payment',
+      sourceId: p.id,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await backend.writeBudgetEntry(entry);
+  }
+
+  Future<void> _deleteBudgetBySource(
+      String sourceType, String sourceId, DateTime now) async {
+    final all = await backend.readBudgetEntries();
+    final existing = all.where((e) =>
+        e.sourceType == sourceType && e.sourceId == sourceId).toList();
+    for (final e in existing) {
+      await backend.deleteBudgetEntry(e.id, now);
+    }
+  }
+
+  Future<String> _namaCustomer(String customerId) async {
+    final cs = await backend.readCustomers();
+    final c = cs.where((c) => c.id == customerId).firstOrNull;
+    return c?.nama ?? 'Nasabah';
   }
 }

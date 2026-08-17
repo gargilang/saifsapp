@@ -34,7 +34,13 @@ class SyncController extends Notifier<SyncUiState> {
     _debounce = Timer(const Duration(seconds: 5), syncNow);
   }
 
-  Future<void> syncNow() async {
+  Future<void> syncNow() => _run((engine) => engine.syncAll());
+
+  /// Sinkron ulang penuh: reset watermark lalu tarik semua data dari server.
+  /// Jaring pengaman jika ada data yang tertinggal.
+  Future<void> resyncNow() => _run((engine) => engine.resyncAll());
+
+  Future<void> _run(Future<void> Function(SyncEngine) action) async {
     if (_running) return;
     _running = true;
     state = state.copyWith(syncing: true);
@@ -42,7 +48,7 @@ class SyncController extends Notifier<SyncUiState> {
       final db = ref.read(appDatabaseProvider);
       final engine = SyncEngine(db, ref.read(remoteStoreProvider),
           SyncStateStore(await SharedPreferences.getInstance()));
-      await engine.syncAll();
+      await action(engine);
       state = state.copyWith(
           syncing: false, offline: false, lastSync: DateTime.now());
       invalidateAllData(ref.invalidate);

@@ -6,6 +6,13 @@ abstract class RemoteStore {
   Future<List<Map<String, dynamic>>> fetchSince(String table, DateTime? since);
   Future<void> upsert(String table, List<Map<String, dynamic>> rows);
 
+  /// Update satu row berdasarkan [id]. Hanya kirim kolom yang mau diubah.
+  Future<void> update(String table, String id, Map<String, dynamic> values);
+
+  /// Update semua row dengan customer_id = [customerId].
+  Future<void> updateByCustomer(
+      String table, String customerId, Map<String, dynamic> values);
+
   /// Panggil Supabase Edge Function.
   /// [method] default 'POST'. Gunakan 'GET' untuk operasi baca tanpa body.
   Future<Map<String, dynamic>> callFunction(
@@ -31,6 +38,15 @@ class SupabaseRemoteStore implements RemoteStore {
   @override
   Future<void> upsert(String table, List<Map<String, dynamic>> rows) =>
       _client.from(table).upsert(rows);
+
+  @override
+  Future<void> update(String table, String id, Map<String, dynamic> values) =>
+      _client.from(table).update(values).eq('id', id);
+
+  @override
+  Future<void> updateByCustomer(
+          String table, String customerId, Map<String, dynamic> values) =>
+      _client.from(table).update(values).eq('customer_id', customerId);
 
   @override
   Future<Map<String, dynamic>> callFunction(

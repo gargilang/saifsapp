@@ -56,4 +56,90 @@ void main() {
     await engine.syncAll();
     expect(remote.upsertCalls, calls);
   });
+
+  test('pull menarik baris yang updated_at < now klien tapi > watermark lama',
+      () async {
+    // Regresi bug: data ditulis di server pada t=10:00, lalu Android sync pada
+    // t=12:00. Watermark tidak boleh melompat ke 12:00 dan menelan data 10:00.
+    final state = SyncStateStore(await SharedPreferences.getInstance());
+    final engine2 = SyncEngine(db, remote, state);
+
+    // Sync pertama pada waktu awal (belum ada data) -> watermark tetap null
+    // karena tidak ada baris.
+    await engine2.syncAll();
+    expect(await state.lastPull('customers'), isNull);
+
+    // Server punya baris dengan updated_at lama (sebelum "sekarang" klien).
+    remote.tables['customers'] = {
+      'c1': Customer(id: 'c1', nama: 'DARI WEB', createdAt: t0, updatedAt: t0)
+          .toJson()
+    };
+
+    // Sync kedua: klien-nya "sekarang" jauh setelah t0. Data t0 harus tetap masuk.
+    await engine2.syncAll();
+    expect((await db.activeCustomers()).single.nama, 'DARI WEB');
+  });
+
+  test('watermark tersimpan = max(updated_at) baris yang ditarik, bukan now',
+      () async {
+    final state = SyncStateStore(await SharedPreferences.getInstance());
+    final engine2 = SyncEngine(db, remote, state);
+
+    final tA = DateTime.utc(2026, 8, 10, 9);
+    final tB = DateTime.utc(2026, 8, 10, 11);
+    remote.tables['customers'] = {
+      'a': Customer(id: 'a', nama: 'A', createdAt: tA, updatedAt: tA).toJson(),
+      'b': Customer(id: 'b', nama: 'B', createdAt: tB, updatedAt: tB).toJson(),
+    };
+
+    await engine2.syncAll();
+
+    expect(await state.lastPull('customers'), tB);
+  });
+
+  test('pull tanpa baris tidak memajukan watermark', () async {
+    final state = SyncStateStore(await SharedPreferences.getInstance());
+    final engine2 = SyncEngine(db, remote, state);
+
+    final tA = DateTime.utc(2026, 8, 10, 9);
+    remote.tables['customers'] = {
+      'a': Customer(id: 'a', nama: 'A', createdAt: tA, updatedAt: tA).toJson(),
+    };
+    await engine2.syncAll();
+    expect(await state.lastPull('customers'), tA);
+
+    // Sync lagi tanpa data baru: watermark tetap tA (tidak maju ke now).
+    await engine2.syncAll();
+    expect(await state.lastPull('customers'), tA);
+  });
+
+  test('resyncAll menarik ulang semua baris meski watermark sudah maju',
+      () async {
+    final state = SyncStateStore(await SharedPreferences.getInstance());
+    final engine2 = SyncEngine(db, remote, state);
+
+    final tA = DateTime.utc(2026, 8, 10, 9);
+    remote.tables['customers'] = {
+      'a': Customer(id: 'a', nama: 'A', createdAt: tA, updatedAt: tA).toJson(),
+    };
+    await engine2.syncAll();
+    // Hapus lokal untuk simulasi "data hilang".
+    await db.delete(db.customers).go();
+    expect(await db.activeCustomers(), isEmpty);
+
+    // Full resync harus menarik ulang meski watermark sudah di tA.
+    await engine2.resyncAll();
+    expect((await db.activeCustomers()).single.nama, 'A');
+  });
+
+  test('SyncStateStore.clearAll menghapus watermark', () async {
+    final state = SyncStateStore(await SharedPreferences.getInstance());
+    await state.setLastPull('customers', DateTime.utc(2026, 8, 10));
+    await state.setLastPull('purchases', DateTime.utc(2026, 8, 10));
+
+    await state.clearAll(['customers', 'purchases', 'payments', 'budget_entries']);
+
+    expect(await state.lastPull('customers'), isNull);
+    expect(await state.lastPull('purchases'), isNull);
+  });
 }

@@ -117,9 +117,16 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                                     : cs.error,
                               ),
                             ),
-                            title: Text(lines[i].entry.namaTransaksi,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
+                            title: Row(children: [
+                              Expanded(
+                                child: Text(lines[i].entry.namaTransaksi,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                              if (lines[i].entry.isAuto)
+                                Icon(Icons.link,
+                                    size: 14, color: cs.onSurfaceVariant),
+                            ]),
                             subtitle:
                                 Text(tampilTanggal(lines[i].entry.tanggal)),
                             trailing: Column(
@@ -140,15 +147,38 @@ class _BudgetPageState extends ConsumerState<BudgetPage> {
                               ],
                             ),
                             onLongPress: () async {
-                              if (await confirmDialog(context,
-                                  title: 'Hapus transaksi?',
-                                  message: lines[i].entry.namaTransaksi)) {
-                                await mutate(
-                                    ref,
-                                    () => ref
-                                        .read(repoProvider)
-                                        .deleteBudgetEntry(
-                                            lines[i].entry.id));
+                              if (lines[i].entry.isAuto) {
+                                // Entry otomatis dari transaksi nasabah
+                                final source = lines[i].entry.sourceType == 'purchase'
+                                    ? 'transaksi pembelian'
+                                    : 'pembayaran';
+                                await showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Tidak bisa dihapus'),
+                                    content: Text(
+                                        'Data ini terkait dengan $source nasabah. '
+                                        'Untuk menghapus, silakan hapus dari halaman detail nasabah terkait.'),
+                                    actions: [
+                                      FilledButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text('Mengerti'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                // Entry manual bisa dihapus
+                                if (await confirmDialog(context,
+                                    title: 'Hapus transaksi?',
+                                    message: lines[i].entry.namaTransaksi)) {
+                                  await mutate(
+                                      ref,
+                                      () => ref
+                                          .read(repoProvider)
+                                          .deleteBudgetEntry(
+                                              lines[i].entry.id));
+                                }
                               }
                             },
                           ),

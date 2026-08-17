@@ -14,6 +14,7 @@ import '../../widgets/confirm_dialog.dart';
 import '../auth/auth_controller.dart';
 import 'admin_list_page.dart';
 import 'admin_providers.dart';
+import 'change_password_sheet.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -37,34 +38,48 @@ class SettingsPage extends ConsumerWidget {
     return ListView(padding: const EdgeInsets.all(16), children: [
       // ── Profil ────────────────────────────────────────────────────────────
       Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: cs.primaryContainer,
-              child: Text(_inisial(namaAtauEmail),
-                  style: TextStyle(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20)),
+        child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: cs.primaryContainer,
+                child: Text(_inisial(namaAtauEmail),
+                    style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(namaAtauEmail,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      Text('Admin · $email',
+                          style: Theme.of(context).textTheme.bodyMedium),
+                    ]),
+              ),
+            ]),
+          ),
+          Divider(height: 1, indent: 16, color: cs.surfaceContainerHighest),
+          ListTile(
+            leading: Icon(Icons.password_outlined, color: cs.onSurfaceVariant),
+            title: const Text('Ubah Password'),
+            subtitle: const Text('Ganti password akun Anda'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => const ChangePasswordSheet(),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(namaAtauEmail,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600)),
-                    Text('Admin · $email',
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  ]),
-            ),
-          ]),
-        ),
+          ),
+        ]),
       ),
       const SizedBox(height: 16),
 
@@ -95,6 +110,36 @@ class SettingsPage extends ConsumerWidget {
                     ref.read(syncControllerProvider.notifier).syncNow(),
                 child: const Text('Sinkronkan'),
               ),
+            ),
+            Divider(height: 1, indent: 16, color: cs.surfaceContainerHighest),
+            ListTile(
+              leading: Icon(Icons.cloud_sync_outlined, color: cs.onSurfaceVariant),
+              title: const Text('Sinkronkan Ulang Penuh'),
+              subtitle: const Text(
+                  'Tarik ulang semua data dari server. Pakai jika ada data yang tidak muncul.'),
+              trailing: sync.syncing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.refresh),
+              onTap: sync.syncing
+                  ? null
+                  : () async {
+                      if (await confirmDialog(context,
+                          title: 'Sinkronkan ulang penuh?',
+                          message:
+                              'Semua data akan ditarik ulang dari server. Ini aman dan tidak menghapus data Anda.')) {
+                        await ref
+                            .read(syncControllerProvider.notifier)
+                            .resyncNow();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Sinkron ulang selesai.')));
+                        }
+                      }
+                    },
             ),
           ],
           Divider(height: 1, indent: 16, color: cs.surfaceContainerHighest),

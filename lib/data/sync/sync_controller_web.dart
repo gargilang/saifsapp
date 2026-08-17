@@ -10,6 +10,8 @@ class SyncController extends Notifier<SyncUiState> {
   void requestSync() {}
 
   Future<void> syncNow() async {}
+
+  Future<void> resyncNow() async {}
 }
 
 final syncControllerProvider =

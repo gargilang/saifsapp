@@ -83,6 +83,56 @@ void main() {
     expect(backend.customers.singleWhere((e) => e.id == 'c3').deletedAt, isNotNull);
   });
 
+  test('deleteCustomerCascade: soft delete customer + purchases + payments', () async {
+    await repo.deleteCustomerCascade('c1');
+    final ids = (await repo.customers()).map((e) => e.customer.id);
+    expect(ids, isNot(contains('c1')));
+    expect(backend.customers.singleWhere((e) => e.id == 'c1').deletedAt, isNotNull);
+    // purchases c1 ikut terhapus
+    expect(backend.purchases.singleWhere((e) => e.id == 'p1').deletedAt, isNotNull);
+    expect(backend.purchases.singleWhere((e) => e.id == 'p2').deletedAt, isNotNull);
+    // payments c1 ikut terhapus
+    expect(backend.payments.singleWhere((e) => e.id == 'm1').deletedAt, isNotNull);
+    // customer lain tidak terpengaruh
+    expect(backend.customers.singleWhere((e) => e.id == 'c2').deletedAt, isNull);
+    expect(backend.purchases.singleWhere((e) => e.id == 'p3').deletedAt, isNull);
+    expect(backend.payments.singleWhere((e) => e.id == 'm2').deletedAt, isNull);
+  });
+
+  test('savePurchase: auto-create budget entry pengeluaran', () async {
+    await repo.savePurchase(p('p9', 'c1', 500000, DateTime(2026, 8, 10)));
+    final budget = backend.budget.singleWhere((e) => e.sourceId == 'p9');
+    expect(budget.sourceType, 'purchase');
+    expect(budget.tipe, 'pengeluaran');
+    expect(budget.jumlah, 500000);
+    expect(budget.namaTransaksi, contains('WIWIK'));
+    expect(budget.namaTransaksi, contains('p9'));
+  });
+
+  test('savePayment: auto-create budget entry pemasukan', () async {
+    await repo.savePayment(pm('m9', 'c1', 300000, DateTime(2026, 8, 10)));
+    final budget = backend.budget.singleWhere((e) => e.sourceId == 'm9');
+    expect(budget.sourceType, 'payment');
+    expect(budget.tipe, 'pemasukan');
+    expect(budget.jumlah, 300000);
+    expect(budget.namaTransaksi, contains('WIWIK'));
+    expect(budget.namaTransaksi, contains('Pembayaran'));
+  });
+
+  test('deletePurchase: auto-delete budget entry terkait', () async {
+    await repo.savePurchase(p('p9', 'c1', 500000, DateTime(2026, 8, 10)));
+    expect(backend.budget.any((e) => e.sourceId == 'p9'), isTrue);
+    await repo.deletePurchase('p9');
+    expect(backend.budget.any((e) => e.sourceId == 'p9' && e.deletedAt == null), isFalse);
+  });
+
+  test('deletePayment: auto-delete budget entry terkait', () async {
+    await repo.savePayment(pm('m9', 'c1', 300000, DateTime(2026, 8, 10)));
+    expect(backend.budget.any((e) => e.sourceId == 'm9'), isTrue);
+    await repo.deletePayment('m9');
+    expect(backend.budget.any((e) => e.sourceId == 'm9' && e.deletedAt == null), isFalse);
+  });
+
   test('budgetMonth: saldoAwal dari bulan sebelumnya', () async {
     backend.budget.addAll([
       BudgetEntry(id: 'b0', tanggal: DateTime(2026, 7, 1), namaTransaksi: 'x',

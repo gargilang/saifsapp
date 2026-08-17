@@ -12,4 +12,11 @@ class SyncStateStore {
 
   Future<void> setLastPull(String table, DateTime t) =>
       _prefs.setString('last_pull_$table', t.toIso8601String());
+
+  /// Hapus watermark untuk [tables] (dipakai full resync).
+  Future<void> clearAll(List<String> tables) async {
+    for (final t in tables) {
+      await _prefs.remove('last_pull_$t');
+    }
+  }
 }

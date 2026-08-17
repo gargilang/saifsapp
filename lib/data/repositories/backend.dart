@@ -14,6 +14,8 @@ abstract class Backend {
   Future<void> writePayment(Payment v);
   Future<void> writeBudgetEntry(BudgetEntry v);
   Future<void> deleteCustomer(String id, DateTime at);
+  /// Soft delete customer + semua purchases & payments terkait.
+  Future<void> deleteCustomerCascade(String id, DateTime at);
   Future<void> deletePurchase(String id, DateTime at);
   Future<void> deletePayment(String id, DateTime at);
   Future<void> deleteBudgetEntry(String id, DateTime at);

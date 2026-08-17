@@ -75,6 +75,8 @@ class BudgetEntries extends Table {
   IntColumn get jumlah => integer()();
   TextColumn get catatan => text().nullable()();
   TextColumn get createdBy => text().nullable()();
+  TextColumn get sourceType => text().withDefault(const Constant('manual'))();
+  TextColumn get sourceId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -89,13 +91,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(purchases, purchases.jenis);
+          }
+          if (from < 3) {
+            await m.addColumn(budgetEntries, budgetEntries.sourceType);
+            await m.addColumn(budgetEntries, budgetEntries.sourceId);
           }
         },
       );
@@ -129,6 +135,11 @@ class AppDatabase extends _$AppDatabase {
           PurchasesCompanion(
               deletedAt: Value(at), updatedAt: Value(at),
               isDirty: const Value(true)));
+  Future<void> softDeletePurchasesByCustomer(String customerId, DateTime at) =>
+      (update(purchases)..where((t) => t.customerId.equals(customerId))).write(
+          PurchasesCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
   Future<List<PurchaseRow>> dirtyPurchaseRows() =>
       (select(purchases)..where((t) => t.isDirty)).get();
   Future<void> clearPurchasesDirty(List<String> ids) =>
@@ -145,6 +156,11 @@ class AppDatabase extends _$AppDatabase {
       into(payments).insertOnConflictUpdate(c);
   Future<void> softDeletePaymentRow(String id, DateTime at) =>
       (update(payments)..where((t) => t.id.equals(id))).write(
+          PaymentsCompanion(
+              deletedAt: Value(at), updatedAt: Value(at),
+              isDirty: const Value(true)));
+  Future<void> softDeletePaymentsByCustomer(String customerId, DateTime at) =>
+      (update(payments)..where((t) => t.customerId.equals(customerId))).write(
           PaymentsCompanion(
               deletedAt: Value(at), updatedAt: Value(at),
               isDirty: const Value(true)));
@@ -247,6 +263,7 @@ extension BudgetEntryRowX on BudgetEntryRow {
   BudgetEntry toModel() => BudgetEntry(
       id: id, tanggal: tanggal, namaTransaksi: namaTransaksi, tipe: tipe,
       jumlah: jumlah, catatan: catatan, createdBy: createdBy,
+      sourceType: sourceType, sourceId: sourceId,
       createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt);
 }
 
@@ -256,7 +273,9 @@ extension BudgetEntryX on BudgetEntry {
           id: Value(id), tanggal: Value(tanggal),
           namaTransaksi: Value(namaTransaksi), tipe: Value(tipe),
           jumlah: Value(jumlah), catatan: Value(catatan),
-          createdBy: Value(createdBy), createdAt: Value(createdAt),
+          createdBy: Value(createdBy),
+          sourceType: Value(sourceType), sourceId: Value(sourceId),
+          createdAt: Value(createdAt),
           updatedAt: Value(updatedAt), deletedAt: Value(deletedAt),
           isDirty: Value(dirty));
 }

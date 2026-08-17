@@ -52,6 +52,12 @@ class FakeBackend implements Backend {
     customers = [for (final c in customers) c.id == id ? c.copyWith(deletedAt: at) : c];
   }
   @override
+  Future<void> deleteCustomerCascade(String id, DateTime at) async {
+    customers = [for (final c in customers) c.id == id ? c.copyWith(deletedAt: at) : c];
+    purchases = [for (final p in purchases) p.customerId == id ? p.copyWith(deletedAt: at) : p];
+    payments = [for (final p in payments) p.customerId == id ? p.copyWith(deletedAt: at) : p];
+  }
+  @override
   Future<void> deletePurchase(String id, DateTime at) async {
     purchases = [for (final p in purchases) p.id == id ? p.copyWith(deletedAt: at) : p];
   }
