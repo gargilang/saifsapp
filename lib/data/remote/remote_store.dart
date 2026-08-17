@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'paginate.dart';
+
 /// Akses generik per tabel ke Supabase (json key = nama kolom).
 abstract class RemoteStore {
   /// Ambil semua row (semua kolom), atau hanya yang updated_at > [since].
@@ -28,11 +30,17 @@ class SupabaseRemoteStore implements RemoteStore {
 
   @override
   Future<List<Map<String, dynamic>>> fetchSince(String table, DateTime? since) {
-    final query = _client.from(table).select();
-    if (since != null) {
-      return query.gt('updated_at', since.toIso8601String());
-    }
-    return query;
+    // Paginasi: PostgREST membatasi 1000 baris/request. Tanpa ini, tabel
+    // dengan >1000 baris (mis. payments) tersinkron tidak lengkap → saldo salah.
+    return fetchAllPaged((from, to) async {
+      var query = _client.from(table).select();
+      if (since != null) {
+        query = query.gt('updated_at', since.toIso8601String());
+      }
+      // range inklusif, urut stabil by id agar paginasi konsisten.
+      final rows = await query.order('id', ascending: true).range(from, to);
+      return List<Map<String, dynamic>>.from(rows);
+    });
   }
 
   @override
