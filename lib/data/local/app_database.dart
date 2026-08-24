@@ -4,6 +4,8 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../models/budget_entry.dart';
 import '../models/customer.dart';
+import '../models/fund_ledger_entry.dart';
+import '../models/fund_source.dart';
 import '../models/payment.dart';
 import '../models/purchase.dart';
 
@@ -37,6 +39,7 @@ class Purchases extends Table {
   IntColumn get hargaBeli => integer().nullable()();
   DateTimeColumn get tanggalBeli => dateTime()();
   TextColumn get catatan => text().nullable()();
+  TextColumn get fundSourceId => text().nullable()();
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -55,8 +58,10 @@ class Payments extends Table {
   TextColumn get metode => text().withDefault(const Constant('tunai'))();
   TextColumn get catatan => text().nullable()();
   TextColumn get sumber => text().withDefault(const Constant('admin'))();
-  TextColumn get statusVerifikasi => text().withDefault(const Constant('verified'))();
+  TextColumn get statusVerifikasi =>
+      text().withDefault(const Constant('verified'))();
   TextColumn get buktiFotoUrl => text().nullable()();
+  TextColumn get fundSourceId => text().nullable()();
   TextColumn get createdBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -85,26 +90,76 @@ class BudgetEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Customers, Purchases, Payments, BudgetEntries])
+@DataClassName('FundSourceRow')
+class FundSources extends Table {
+  TextColumn get id => text()();
+  TextColumn get nama => text().unique()();
+  TextColumn get colorKey => text()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  BoolColumn get isDirty => boolean().withDefault(const Constant(false))();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('FundLedgerEntryRow')
+class FundLedgerEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get fundSourceId => text()();
+  DateTimeColumn get tanggal => dateTime()();
+  TextColumn get tipe => text()();
+  IntColumn get jumlahDelta => integer()();
+  TextColumn get referenceType => text()();
+  TextColumn get referenceId => text().nullable()();
+  TextColumn get transferGroupId => text().nullable()();
+  TextColumn get catatan => text().nullable()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  BoolColumn get isDirty => boolean().withDefault(const Constant(false))();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(
+  tables: [
+    Customers,
+    Purchases,
+    Payments,
+    BudgetEntries,
+    FundSources,
+    FundLedgerEntries,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'sandiapp'));
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            await m.addColumn(purchases, purchases.jenis);
-          }
-          if (from < 3) {
-            await m.addColumn(budgetEntries, budgetEntries.sourceType);
-            await m.addColumn(budgetEntries, budgetEntries.sourceId);
-          }
-        },
-      );
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(purchases, purchases.jenis);
+      }
+      if (from < 3) {
+        await m.addColumn(budgetEntries, budgetEntries.sourceType);
+        await m.addColumn(budgetEntries, budgetEntries.sourceId);
+      }
+      if (from < 4) {
+        await m.createTable(fundSources);
+        await m.createTable(fundLedgerEntries);
+        await m.addColumn(purchases, purchases.fundSourceId);
+        await m.addColumn(payments, payments.fundSourceId);
+      }
+    },
+  );
 
   // ---- customers ----
   Future<List<CustomerRow>> activeCustomers() =>
@@ -113,17 +168,23 @@ class AppDatabase extends _$AppDatabase {
       into(customers).insertOnConflictUpdate(c);
   Future<void> softDeleteCustomerRow(String id, DateTime at) =>
       (update(customers)..where((t) => t.id.equals(id))).write(
-          CustomersCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        CustomersCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<List<CustomerRow>> dirtyCustomerRows() =>
       (select(customers)..where((t) => t.isDirty)).get();
   Future<void> clearCustomersDirty(List<String> ids) =>
-      (update(customers)..where((t) => t.id.isIn(ids)))
-          .write(const CustomersCompanion(isDirty: Value(false)));
-  Future<void> applyRemoteCustomers(List<Customer> items) async =>
-      batch((b) => b.insertAllOnConflictUpdate(
-          customers, [for (final c in items) c.toCompanion(dirty: false)]));
+      (update(customers)..where((t) => t.id.isIn(ids))).write(
+        const CustomersCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemoteCustomers(List<Customer> items) async => batch(
+    (b) => b.insertAllOnConflictUpdate(customers, [
+      for (final c in items) c.toCompanion(dirty: false),
+    ]),
+  );
 
   // ---- purchases ----
   Future<List<PurchaseRow>> activePurchases() =>
@@ -132,22 +193,31 @@ class AppDatabase extends _$AppDatabase {
       into(purchases).insertOnConflictUpdate(c);
   Future<void> softDeletePurchaseRow(String id, DateTime at) =>
       (update(purchases)..where((t) => t.id.equals(id))).write(
-          PurchasesCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        PurchasesCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<void> softDeletePurchasesByCustomer(String customerId, DateTime at) =>
       (update(purchases)..where((t) => t.customerId.equals(customerId))).write(
-          PurchasesCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        PurchasesCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<List<PurchaseRow>> dirtyPurchaseRows() =>
       (select(purchases)..where((t) => t.isDirty)).get();
   Future<void> clearPurchasesDirty(List<String> ids) =>
-      (update(purchases)..where((t) => t.id.isIn(ids)))
-          .write(const PurchasesCompanion(isDirty: Value(false)));
-  Future<void> applyRemotePurchases(List<Purchase> items) async =>
-      batch((b) => b.insertAllOnConflictUpdate(
-          purchases, [for (final p in items) p.toCompanion(dirty: false)]));
+      (update(purchases)..where((t) => t.id.isIn(ids))).write(
+        const PurchasesCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemotePurchases(List<Purchase> items) async => batch(
+    (b) => b.insertAllOnConflictUpdate(purchases, [
+      for (final p in items) p.toCompanion(dirty: false),
+    ]),
+  );
 
   // ---- payments ----
   Future<List<PaymentRow>> activePayments() =>
@@ -156,22 +226,31 @@ class AppDatabase extends _$AppDatabase {
       into(payments).insertOnConflictUpdate(c);
   Future<void> softDeletePaymentRow(String id, DateTime at) =>
       (update(payments)..where((t) => t.id.equals(id))).write(
-          PaymentsCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        PaymentsCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<void> softDeletePaymentsByCustomer(String customerId, DateTime at) =>
       (update(payments)..where((t) => t.customerId.equals(customerId))).write(
-          PaymentsCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        PaymentsCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<List<PaymentRow>> dirtyPaymentRows() =>
       (select(payments)..where((t) => t.isDirty)).get();
   Future<void> clearPaymentsDirty(List<String> ids) =>
-      (update(payments)..where((t) => t.id.isIn(ids)))
-          .write(const PaymentsCompanion(isDirty: Value(false)));
-  Future<void> applyRemotePayments(List<Payment> items) async =>
-      batch((b) => b.insertAllOnConflictUpdate(
-          payments, [for (final p in items) p.toCompanion(dirty: false)]));
+      (update(payments)..where((t) => t.id.isIn(ids))).write(
+        const PaymentsCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemotePayments(List<Payment> items) async => batch(
+    (b) => b.insertAllOnConflictUpdate(payments, [
+      for (final p in items) p.toCompanion(dirty: false),
+    ]),
+  );
 
   // ---- budget_entries ----
   Future<List<BudgetEntryRow>> activeBudgetEntries() =>
@@ -180,102 +259,313 @@ class AppDatabase extends _$AppDatabase {
       into(budgetEntries).insertOnConflictUpdate(c);
   Future<void> softDeleteBudgetEntryRow(String id, DateTime at) =>
       (update(budgetEntries)..where((t) => t.id.equals(id))).write(
-          BudgetEntriesCompanion(
-              deletedAt: Value(at), updatedAt: Value(at),
-              isDirty: const Value(true)));
+        BudgetEntriesCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
   Future<List<BudgetEntryRow>> dirtyBudgetEntryRows() =>
       (select(budgetEntries)..where((t) => t.isDirty)).get();
   Future<void> clearBudgetEntriesDirty(List<String> ids) =>
-      (update(budgetEntries)..where((t) => t.id.isIn(ids)))
-          .write(const BudgetEntriesCompanion(isDirty: Value(false)));
-  Future<void> applyRemoteBudgetEntries(List<BudgetEntry> items) async =>
-      batch((b) => b.insertAllOnConflictUpdate(
-          budgetEntries, [for (final e in items) e.toCompanion(dirty: false)]));
+      (update(budgetEntries)..where((t) => t.id.isIn(ids))).write(
+        const BudgetEntriesCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemoteBudgetEntries(List<BudgetEntry> items) async => batch(
+    (b) => b.insertAllOnConflictUpdate(budgetEntries, [
+      for (final e in items) e.toCompanion(dirty: false),
+    ]),
+  );
+
+  // ---- fund_sources ----
+  Future<List<FundSourceRow>> activeFundSources() =>
+      (select(fundSources)..where(
+            (table) => table.deletedAt.isNull() & table.isActive.equals(true),
+          ))
+          .get();
+  Future<void> upsertFundSourceRow(FundSourcesCompanion companion) =>
+      into(fundSources).insertOnConflictUpdate(companion);
+  Future<void> softDeleteFundSourceRow(String id, DateTime at) =>
+      (update(fundSources)..where((table) => table.id.equals(id))).write(
+        FundSourcesCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
+  Future<List<FundSourceRow>> dirtyFundSourceRows() =>
+      (select(fundSources)..where((table) => table.isDirty)).get();
+  Future<void> clearFundSourcesDirty(List<String> ids) =>
+      (update(fundSources)..where((table) => table.id.isIn(ids))).write(
+        const FundSourcesCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemoteFundSources(List<FundSource> items) async => batch(
+    (batch) => batch.insertAllOnConflictUpdate(fundSources, [
+      for (final source in items) source.toCompanion(dirty: false),
+    ]),
+  );
+
+  // ---- fund_ledger_entries ----
+  Future<List<FundLedgerEntryRow>> activeFundLedgerEntries() => (select(
+    fundLedgerEntries,
+  )..where((table) => table.deletedAt.isNull())).get();
+  Future<void> upsertFundLedgerEntryRow(FundLedgerEntriesCompanion companion) =>
+      into(fundLedgerEntries).insertOnConflictUpdate(companion);
+  Future<void> softDeleteFundLedgerEntryRow(String id, DateTime at) =>
+      (update(fundLedgerEntries)..where((table) => table.id.equals(id))).write(
+        FundLedgerEntriesCompanion(
+          deletedAt: Value(at),
+          updatedAt: Value(at),
+          isDirty: const Value(true),
+        ),
+      );
+  Future<List<FundLedgerEntryRow>> dirtyFundLedgerEntryRows() =>
+      (select(fundLedgerEntries)..where((table) => table.isDirty)).get();
+  Future<void> clearFundLedgerEntriesDirty(List<String> ids) =>
+      (update(fundLedgerEntries)..where((table) => table.id.isIn(ids))).write(
+        const FundLedgerEntriesCompanion(isDirty: Value(false)),
+      );
+  Future<void> applyRemoteFundLedgerEntries(
+    List<FundLedgerEntry> items,
+  ) async => batch(
+    (batch) => batch.insertAllOnConflictUpdate(fundLedgerEntries, [
+      for (final entry in items) entry.toCompanion(dirty: false),
+    ]),
+  );
+
+  Future<void> writeFundTransferAtomic(FundTransfer transfer) =>
+      transaction(() async {
+        await into(
+          fundLedgerEntries,
+        ).insertOnConflictUpdate(transfer.keluar.toCompanion(dirty: true));
+        await into(
+          fundLedgerEntries,
+        ).insertOnConflictUpdate(transfer.masuk.toCompanion(dirty: true));
+      });
 
   Future<int> dirtyCount() async {
     Future<int> count(String table) async =>
-        (await customSelect('SELECT COUNT(*) AS c FROM $table WHERE is_dirty = 1')
-                .getSingle())
-            .data['c'] as int;
+        (await customSelect(
+              'SELECT COUNT(*) AS c FROM $table WHERE is_dirty = 1',
+            ).getSingle()).data['c']
+            as int;
     return await count('customers') +
         await count('purchases') +
         await count('payments') +
-        await count('budget_entries');
+        await count('budget_entries') +
+        await count('fund_sources') +
+        await count('fund_ledger_entries');
   }
 }
 
 // ---- mapper row <-> model ----
 extension CustomerRowX on CustomerRow {
   Customer toModel() => Customer(
-      id: id, nama: nama, noHp: noHp, alamat: alamat, catatan: catatan,
-      isArchived: isArchived, authUserId: authUserId, createdBy: createdBy,
-      createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt);
+    id: id,
+    nama: nama,
+    noHp: noHp,
+    alamat: alamat,
+    catatan: catatan,
+    isArchived: isArchived,
+    authUserId: authUserId,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
 }
 
 extension CustomerX on Customer {
   CustomersCompanion toCompanion({required bool dirty}) => CustomersCompanion(
-      id: Value(id), nama: Value(nama), noHp: Value(noHp), alamat: Value(alamat),
-      catatan: Value(catatan), isArchived: Value(isArchived),
-      authUserId: Value(authUserId), createdBy: Value(createdBy),
-      createdAt: Value(createdAt), updatedAt: Value(updatedAt),
-      deletedAt: Value(deletedAt), isDirty: Value(dirty));
+    id: Value(id),
+    nama: Value(nama),
+    noHp: Value(noHp),
+    alamat: Value(alamat),
+    catatan: Value(catatan),
+    isArchived: Value(isArchived),
+    authUserId: Value(authUserId),
+    createdBy: Value(createdBy),
+    createdAt: Value(createdAt),
+    updatedAt: Value(updatedAt),
+    deletedAt: Value(deletedAt),
+    isDirty: Value(dirty),
+  );
 }
 
 extension PurchaseRowX on PurchaseRow {
   Purchase toModel() => Purchase(
-      id: id, customerId: customerId, namaBarang: namaBarang, jenis: jenis,
-      hargaJual: hargaJual, hargaBeli: hargaBeli, tanggalBeli: tanggalBeli,
-      catatan: catatan, createdBy: createdBy, createdAt: createdAt,
-      updatedAt: updatedAt, deletedAt: deletedAt);
+    id: id,
+    customerId: customerId,
+    namaBarang: namaBarang,
+    jenis: jenis,
+    hargaJual: hargaJual,
+    hargaBeli: hargaBeli,
+    tanggalBeli: tanggalBeli,
+    catatan: catatan,
+    fundSourceId: fundSourceId,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
 }
 
 extension PurchaseX on Purchase {
   PurchasesCompanion toCompanion({required bool dirty}) => PurchasesCompanion(
-      id: Value(id), customerId: Value(customerId), namaBarang: Value(namaBarang),
-      jenis: Value(jenis), hargaJual: Value(hargaJual), hargaBeli: Value(hargaBeli),
-      tanggalBeli: Value(tanggalBeli), catatan: Value(catatan),
-      createdBy: Value(createdBy), createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt), deletedAt: Value(deletedAt),
-      isDirty: Value(dirty));
+    id: Value(id),
+    customerId: Value(customerId),
+    namaBarang: Value(namaBarang),
+    jenis: Value(jenis),
+    hargaJual: Value(hargaJual),
+    hargaBeli: Value(hargaBeli),
+    tanggalBeli: Value(tanggalBeli),
+    catatan: Value(catatan),
+    fundSourceId: Value(fundSourceId),
+    createdBy: Value(createdBy),
+    createdAt: Value(createdAt),
+    updatedAt: Value(updatedAt),
+    deletedAt: Value(deletedAt),
+    isDirty: Value(dirty),
+  );
 }
 
 extension PaymentRowX on PaymentRow {
   Payment toModel() => Payment(
-      id: id, customerId: customerId, jumlah: jumlah, tanggalBayar: tanggalBayar,
-      metode: metode, catatan: catatan, sumber: sumber,
-      statusVerifikasi: statusVerifikasi, buktiFotoUrl: buktiFotoUrl,
-      createdBy: createdBy, createdAt: createdAt, updatedAt: updatedAt,
-      deletedAt: deletedAt);
+    id: id,
+    customerId: customerId,
+    jumlah: jumlah,
+    tanggalBayar: tanggalBayar,
+    metode: metode,
+    catatan: catatan,
+    sumber: sumber,
+    statusVerifikasi: statusVerifikasi,
+    buktiFotoUrl: buktiFotoUrl,
+    fundSourceId: fundSourceId,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
 }
 
 extension PaymentX on Payment {
   PaymentsCompanion toCompanion({required bool dirty}) => PaymentsCompanion(
-      id: Value(id), customerId: Value(customerId), jumlah: Value(jumlah),
-      tanggalBayar: Value(tanggalBayar), metode: Value(metode),
-      catatan: Value(catatan), sumber: Value(sumber),
-      statusVerifikasi: Value(statusVerifikasi), buktiFotoUrl: Value(buktiFotoUrl),
-      createdBy: Value(createdBy), createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt), deletedAt: Value(deletedAt),
-      isDirty: Value(dirty));
+    id: Value(id),
+    customerId: Value(customerId),
+    jumlah: Value(jumlah),
+    tanggalBayar: Value(tanggalBayar),
+    metode: Value(metode),
+    catatan: Value(catatan),
+    sumber: Value(sumber),
+    statusVerifikasi: Value(statusVerifikasi),
+    buktiFotoUrl: Value(buktiFotoUrl),
+    fundSourceId: Value(fundSourceId),
+    createdBy: Value(createdBy),
+    createdAt: Value(createdAt),
+    updatedAt: Value(updatedAt),
+    deletedAt: Value(deletedAt),
+    isDirty: Value(dirty),
+  );
 }
 
 extension BudgetEntryRowX on BudgetEntryRow {
   BudgetEntry toModel() => BudgetEntry(
-      id: id, tanggal: tanggal, namaTransaksi: namaTransaksi, tipe: tipe,
-      jumlah: jumlah, catatan: catatan, createdBy: createdBy,
-      sourceType: sourceType, sourceId: sourceId,
-      createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt);
+    id: id,
+    tanggal: tanggal,
+    namaTransaksi: namaTransaksi,
+    tipe: tipe,
+    jumlah: jumlah,
+    catatan: catatan,
+    createdBy: createdBy,
+    sourceType: sourceType,
+    sourceId: sourceId,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
 }
 
 extension BudgetEntryX on BudgetEntry {
   BudgetEntriesCompanion toCompanion({required bool dirty}) =>
       BudgetEntriesCompanion(
-          id: Value(id), tanggal: Value(tanggal),
-          namaTransaksi: Value(namaTransaksi), tipe: Value(tipe),
-          jumlah: Value(jumlah), catatan: Value(catatan),
-          createdBy: Value(createdBy),
-          sourceType: Value(sourceType), sourceId: Value(sourceId),
-          createdAt: Value(createdAt),
-          updatedAt: Value(updatedAt), deletedAt: Value(deletedAt),
-          isDirty: Value(dirty));
+        id: Value(id),
+        tanggal: Value(tanggal),
+        namaTransaksi: Value(namaTransaksi),
+        tipe: Value(tipe),
+        jumlah: Value(jumlah),
+        catatan: Value(catatan),
+        createdBy: Value(createdBy),
+        sourceType: Value(sourceType),
+        sourceId: Value(sourceId),
+        createdAt: Value(createdAt),
+        updatedAt: Value(updatedAt),
+        deletedAt: Value(deletedAt),
+        isDirty: Value(dirty),
+      );
+}
+
+extension FundSourceRowX on FundSourceRow {
+  FundSource toModel() => FundSource(
+    id: id,
+    nama: nama,
+    colorKey: colorKey,
+    isActive: isActive,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
+}
+
+extension FundSourceX on FundSource {
+  FundSourcesCompanion toCompanion({required bool dirty}) =>
+      FundSourcesCompanion(
+        id: Value(id),
+        nama: Value(nama),
+        colorKey: Value(colorKey),
+        isActive: Value(isActive),
+        createdBy: Value(createdBy),
+        createdAt: Value(createdAt),
+        updatedAt: Value(updatedAt),
+        deletedAt: Value(deletedAt),
+        isDirty: Value(dirty),
+      );
+}
+
+extension FundLedgerEntryRowX on FundLedgerEntryRow {
+  FundLedgerEntry toModel() => FundLedgerEntry(
+    id: id,
+    fundSourceId: fundSourceId,
+    tanggal: tanggal,
+    tipe: tipe,
+    jumlahDelta: jumlahDelta,
+    referenceType: referenceType,
+    referenceId: referenceId,
+    transferGroupId: transferGroupId,
+    catatan: catatan,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
+}
+
+extension FundLedgerEntryX on FundLedgerEntry {
+  FundLedgerEntriesCompanion toCompanion({required bool dirty}) =>
+      FundLedgerEntriesCompanion(
+        id: Value(id),
+        fundSourceId: Value(fundSourceId),
+        tanggal: Value(tanggal),
+        tipe: Value(tipe),
+        jumlahDelta: Value(jumlahDelta),
+        referenceType: Value(referenceType),
+        referenceId: Value(referenceId),
+        transferGroupId: Value(transferGroupId),
+        catatan: Value(catatan),
+        createdBy: Value(createdBy),
+        createdAt: Value(createdAt),
+        updatedAt: Value(updatedAt),
+        deletedAt: Value(deletedAt),
+        isDirty: Value(dirty),
+      );
 }

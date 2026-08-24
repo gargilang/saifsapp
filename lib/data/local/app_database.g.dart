@@ -805,6 +805,17 @@ class $PurchasesTable extends Purchases
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fundSourceIdMeta = const VerificationMeta(
+    'fundSourceId',
+  );
+  @override
+  late final GeneratedColumn<String> fundSourceId = GeneratedColumn<String>(
+    'fund_source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
   );
@@ -874,6 +885,7 @@ class $PurchasesTable extends Purchases
     hargaBeli,
     tanggalBeli,
     catatan,
+    fundSourceId,
     createdBy,
     createdAt,
     updatedAt,
@@ -948,6 +960,15 @@ class $PurchasesTable extends Purchases
       context.handle(
         _catatanMeta,
         catatan.isAcceptableOrUnknown(data['catatan']!, _catatanMeta),
+      );
+    }
+    if (data.containsKey('fund_source_id')) {
+      context.handle(
+        _fundSourceIdMeta,
+        fundSourceId.isAcceptableOrUnknown(
+          data['fund_source_id']!,
+          _fundSourceIdMeta,
+        ),
       );
     }
     if (data.containsKey('created_by')) {
@@ -1025,6 +1046,10 @@ class $PurchasesTable extends Purchases
         DriftSqlType.string,
         data['${effectivePrefix}catatan'],
       ),
+      fundSourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fund_source_id'],
+      ),
       createdBy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
@@ -1063,6 +1088,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
   final int? hargaBeli;
   final DateTime tanggalBeli;
   final String? catatan;
+  final String? fundSourceId;
   final String? createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -1077,6 +1103,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     this.hargaBeli,
     required this.tanggalBeli,
     this.catatan,
+    this.fundSourceId,
     this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -1097,6 +1124,9 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     map['tanggal_beli'] = Variable<DateTime>(tanggalBeli);
     if (!nullToAbsent || catatan != null) {
       map['catatan'] = Variable<String>(catatan);
+    }
+    if (!nullToAbsent || fundSourceId != null) {
+      map['fund_source_id'] = Variable<String>(fundSourceId);
     }
     if (!nullToAbsent || createdBy != null) {
       map['created_by'] = Variable<String>(createdBy);
@@ -1124,6 +1154,9 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       catatan: catatan == null && nullToAbsent
           ? const Value.absent()
           : Value(catatan),
+      fundSourceId: fundSourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fundSourceId),
       createdBy: createdBy == null && nullToAbsent
           ? const Value.absent()
           : Value(createdBy),
@@ -1150,6 +1183,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       hargaBeli: serializer.fromJson<int?>(json['hargaBeli']),
       tanggalBeli: serializer.fromJson<DateTime>(json['tanggalBeli']),
       catatan: serializer.fromJson<String?>(json['catatan']),
+      fundSourceId: serializer.fromJson<String?>(json['fundSourceId']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -1169,6 +1203,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
       'hargaBeli': serializer.toJson<int?>(hargaBeli),
       'tanggalBeli': serializer.toJson<DateTime>(tanggalBeli),
       'catatan': serializer.toJson<String?>(catatan),
+      'fundSourceId': serializer.toJson<String?>(fundSourceId),
       'createdBy': serializer.toJson<String?>(createdBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -1186,6 +1221,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     Value<int?> hargaBeli = const Value.absent(),
     DateTime? tanggalBeli,
     Value<String?> catatan = const Value.absent(),
+    Value<String?> fundSourceId = const Value.absent(),
     Value<String?> createdBy = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -1200,6 +1236,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     hargaBeli: hargaBeli.present ? hargaBeli.value : this.hargaBeli,
     tanggalBeli: tanggalBeli ?? this.tanggalBeli,
     catatan: catatan.present ? catatan.value : this.catatan,
+    fundSourceId: fundSourceId.present ? fundSourceId.value : this.fundSourceId,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -1222,6 +1259,9 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
           ? data.tanggalBeli.value
           : this.tanggalBeli,
       catatan: data.catatan.present ? data.catatan.value : this.catatan,
+      fundSourceId: data.fundSourceId.present
+          ? data.fundSourceId.value
+          : this.fundSourceId,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -1241,6 +1281,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
           ..write('hargaBeli: $hargaBeli, ')
           ..write('tanggalBeli: $tanggalBeli, ')
           ..write('catatan: $catatan, ')
+          ..write('fundSourceId: $fundSourceId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -1260,6 +1301,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
     hargaBeli,
     tanggalBeli,
     catatan,
+    fundSourceId,
     createdBy,
     createdAt,
     updatedAt,
@@ -1278,6 +1320,7 @@ class PurchaseRow extends DataClass implements Insertable<PurchaseRow> {
           other.hargaBeli == this.hargaBeli &&
           other.tanggalBeli == this.tanggalBeli &&
           other.catatan == this.catatan &&
+          other.fundSourceId == this.fundSourceId &&
           other.createdBy == this.createdBy &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -1294,6 +1337,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
   final Value<int?> hargaBeli;
   final Value<DateTime> tanggalBeli;
   final Value<String?> catatan;
+  final Value<String?> fundSourceId;
   final Value<String?> createdBy;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -1309,6 +1353,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     this.hargaBeli = const Value.absent(),
     this.tanggalBeli = const Value.absent(),
     this.catatan = const Value.absent(),
+    this.fundSourceId = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1325,6 +1370,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     this.hargaBeli = const Value.absent(),
     required DateTime tanggalBeli,
     this.catatan = const Value.absent(),
+    this.fundSourceId = const Value.absent(),
     this.createdBy = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -1347,6 +1393,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     Expression<int>? hargaBeli,
     Expression<DateTime>? tanggalBeli,
     Expression<String>? catatan,
+    Expression<String>? fundSourceId,
     Expression<String>? createdBy,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -1363,6 +1410,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
       if (hargaBeli != null) 'harga_beli': hargaBeli,
       if (tanggalBeli != null) 'tanggal_beli': tanggalBeli,
       if (catatan != null) 'catatan': catatan,
+      if (fundSourceId != null) 'fund_source_id': fundSourceId,
       if (createdBy != null) 'created_by': createdBy,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1381,6 +1429,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     Value<int?>? hargaBeli,
     Value<DateTime>? tanggalBeli,
     Value<String?>? catatan,
+    Value<String?>? fundSourceId,
     Value<String?>? createdBy,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -1397,6 +1446,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
       hargaBeli: hargaBeli ?? this.hargaBeli,
       tanggalBeli: tanggalBeli ?? this.tanggalBeli,
       catatan: catatan ?? this.catatan,
+      fundSourceId: fundSourceId ?? this.fundSourceId,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1433,6 +1483,9 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
     if (catatan.present) {
       map['catatan'] = Variable<String>(catatan.value);
     }
+    if (fundSourceId.present) {
+      map['fund_source_id'] = Variable<String>(fundSourceId.value);
+    }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
@@ -1465,6 +1518,7 @@ class PurchasesCompanion extends UpdateCompanion<PurchaseRow> {
           ..write('hargaBeli: $hargaBeli, ')
           ..write('tanggalBeli: $tanggalBeli, ')
           ..write('catatan: $catatan, ')
+          ..write('fundSourceId: $fundSourceId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -1576,6 +1630,17 @@ class $PaymentsTable extends Payments
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fundSourceIdMeta = const VerificationMeta(
+    'fundSourceId',
+  );
+  @override
+  late final GeneratedColumn<String> fundSourceId = GeneratedColumn<String>(
+    'fund_source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
   );
@@ -1646,6 +1711,7 @@ class $PaymentsTable extends Payments
     sumber,
     statusVerifikasi,
     buktiFotoUrl,
+    fundSourceId,
     createdBy,
     createdAt,
     updatedAt,
@@ -1732,6 +1798,15 @@ class $PaymentsTable extends Payments
         ),
       );
     }
+    if (data.containsKey('fund_source_id')) {
+      context.handle(
+        _fundSourceIdMeta,
+        fundSourceId.isAcceptableOrUnknown(
+          data['fund_source_id']!,
+          _fundSourceIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_by')) {
       context.handle(
         _createdByMeta,
@@ -1811,6 +1886,10 @@ class $PaymentsTable extends Payments
         DriftSqlType.string,
         data['${effectivePrefix}bukti_foto_url'],
       ),
+      fundSourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fund_source_id'],
+      ),
       createdBy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
@@ -1850,6 +1929,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
   final String sumber;
   final String statusVerifikasi;
   final String? buktiFotoUrl;
+  final String? fundSourceId;
   final String? createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -1865,6 +1945,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
     required this.sumber,
     required this.statusVerifikasi,
     this.buktiFotoUrl,
+    this.fundSourceId,
     this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -1886,6 +1967,9 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
     map['status_verifikasi'] = Variable<String>(statusVerifikasi);
     if (!nullToAbsent || buktiFotoUrl != null) {
       map['bukti_foto_url'] = Variable<String>(buktiFotoUrl);
+    }
+    if (!nullToAbsent || fundSourceId != null) {
+      map['fund_source_id'] = Variable<String>(fundSourceId);
     }
     if (!nullToAbsent || createdBy != null) {
       map['created_by'] = Variable<String>(createdBy);
@@ -1914,6 +1998,9 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
       buktiFotoUrl: buktiFotoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(buktiFotoUrl),
+      fundSourceId: fundSourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fundSourceId),
       createdBy: createdBy == null && nullToAbsent
           ? const Value.absent()
           : Value(createdBy),
@@ -1941,6 +2028,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
       sumber: serializer.fromJson<String>(json['sumber']),
       statusVerifikasi: serializer.fromJson<String>(json['statusVerifikasi']),
       buktiFotoUrl: serializer.fromJson<String?>(json['buktiFotoUrl']),
+      fundSourceId: serializer.fromJson<String?>(json['fundSourceId']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -1961,6 +2049,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
       'sumber': serializer.toJson<String>(sumber),
       'statusVerifikasi': serializer.toJson<String>(statusVerifikasi),
       'buktiFotoUrl': serializer.toJson<String?>(buktiFotoUrl),
+      'fundSourceId': serializer.toJson<String?>(fundSourceId),
       'createdBy': serializer.toJson<String?>(createdBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -1979,6 +2068,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
     String? sumber,
     String? statusVerifikasi,
     Value<String?> buktiFotoUrl = const Value.absent(),
+    Value<String?> fundSourceId = const Value.absent(),
     Value<String?> createdBy = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -1994,6 +2084,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
     sumber: sumber ?? this.sumber,
     statusVerifikasi: statusVerifikasi ?? this.statusVerifikasi,
     buktiFotoUrl: buktiFotoUrl.present ? buktiFotoUrl.value : this.buktiFotoUrl,
+    fundSourceId: fundSourceId.present ? fundSourceId.value : this.fundSourceId,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2019,6 +2110,9 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
       buktiFotoUrl: data.buktiFotoUrl.present
           ? data.buktiFotoUrl.value
           : this.buktiFotoUrl,
+      fundSourceId: data.fundSourceId.present
+          ? data.fundSourceId.value
+          : this.fundSourceId,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2039,6 +2133,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
           ..write('sumber: $sumber, ')
           ..write('statusVerifikasi: $statusVerifikasi, ')
           ..write('buktiFotoUrl: $buktiFotoUrl, ')
+          ..write('fundSourceId: $fundSourceId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2059,6 +2154,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
     sumber,
     statusVerifikasi,
     buktiFotoUrl,
+    fundSourceId,
     createdBy,
     createdAt,
     updatedAt,
@@ -2078,6 +2174,7 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
           other.sumber == this.sumber &&
           other.statusVerifikasi == this.statusVerifikasi &&
           other.buktiFotoUrl == this.buktiFotoUrl &&
+          other.fundSourceId == this.fundSourceId &&
           other.createdBy == this.createdBy &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -2095,6 +2192,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
   final Value<String> sumber;
   final Value<String> statusVerifikasi;
   final Value<String?> buktiFotoUrl;
+  final Value<String?> fundSourceId;
   final Value<String?> createdBy;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2111,6 +2209,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     this.sumber = const Value.absent(),
     this.statusVerifikasi = const Value.absent(),
     this.buktiFotoUrl = const Value.absent(),
+    this.fundSourceId = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2128,6 +2227,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     this.sumber = const Value.absent(),
     this.statusVerifikasi = const Value.absent(),
     this.buktiFotoUrl = const Value.absent(),
+    this.fundSourceId = const Value.absent(),
     this.createdBy = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -2150,6 +2250,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     Expression<String>? sumber,
     Expression<String>? statusVerifikasi,
     Expression<String>? buktiFotoUrl,
+    Expression<String>? fundSourceId,
     Expression<String>? createdBy,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2167,6 +2268,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
       if (sumber != null) 'sumber': sumber,
       if (statusVerifikasi != null) 'status_verifikasi': statusVerifikasi,
       if (buktiFotoUrl != null) 'bukti_foto_url': buktiFotoUrl,
+      if (fundSourceId != null) 'fund_source_id': fundSourceId,
       if (createdBy != null) 'created_by': createdBy,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2186,6 +2288,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     Value<String>? sumber,
     Value<String>? statusVerifikasi,
     Value<String?>? buktiFotoUrl,
+    Value<String?>? fundSourceId,
     Value<String?>? createdBy,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -2203,6 +2306,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
       sumber: sumber ?? this.sumber,
       statusVerifikasi: statusVerifikasi ?? this.statusVerifikasi,
       buktiFotoUrl: buktiFotoUrl ?? this.buktiFotoUrl,
+      fundSourceId: fundSourceId ?? this.fundSourceId,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2242,6 +2346,9 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     if (buktiFotoUrl.present) {
       map['bukti_foto_url'] = Variable<String>(buktiFotoUrl.value);
     }
+    if (fundSourceId.present) {
+      map['fund_source_id'] = Variable<String>(fundSourceId.value);
+    }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
@@ -2275,6 +2382,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
           ..write('sumber: $sumber, ')
           ..write('statusVerifikasi: $statusVerifikasi, ')
           ..write('buktiFotoUrl: $buktiFotoUrl, ')
+          ..write('fundSourceId: $fundSourceId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3044,6 +3152,1401 @@ class BudgetEntriesCompanion extends UpdateCompanion<BudgetEntryRow> {
   }
 }
 
+class $FundSourcesTable extends FundSources
+    with TableInfo<$FundSourcesTable, FundSourceRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FundSourcesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _namaMeta = const VerificationMeta('nama');
+  @override
+  late final GeneratedColumn<String> nama = GeneratedColumn<String>(
+    'nama',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _colorKeyMeta = const VerificationMeta(
+    'colorKey',
+  );
+  @override
+  late final GeneratedColumn<String> colorKey = GeneratedColumn<String>(
+    'color_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    nama,
+    colorKey,
+    isActive,
+    createdBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    isDirty,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fund_sources';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FundSourceRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('nama')) {
+      context.handle(
+        _namaMeta,
+        nama.isAcceptableOrUnknown(data['nama']!, _namaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_namaMeta);
+    }
+    if (data.containsKey('color_key')) {
+      context.handle(
+        _colorKeyMeta,
+        colorKey.isAcceptableOrUnknown(data['color_key']!, _colorKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorKeyMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FundSourceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FundSourceRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      nama: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nama'],
+      )!,
+      colorKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_key'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+    );
+  }
+
+  @override
+  $FundSourcesTable createAlias(String alias) {
+    return $FundSourcesTable(attachedDatabase, alias);
+  }
+}
+
+class FundSourceRow extends DataClass implements Insertable<FundSourceRow> {
+  final String id;
+  final String nama;
+  final String colorKey;
+  final bool isActive;
+  final String? createdBy;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool isDirty;
+  const FundSourceRow({
+    required this.id,
+    required this.nama,
+    required this.colorKey,
+    required this.isActive,
+    this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.isDirty,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['nama'] = Variable<String>(nama);
+    map['color_key'] = Variable<String>(colorKey);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['is_dirty'] = Variable<bool>(isDirty);
+    return map;
+  }
+
+  FundSourcesCompanion toCompanion(bool nullToAbsent) {
+    return FundSourcesCompanion(
+      id: Value(id),
+      nama: Value(nama),
+      colorKey: Value(colorKey),
+      isActive: Value(isActive),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      isDirty: Value(isDirty),
+    );
+  }
+
+  factory FundSourceRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FundSourceRow(
+      id: serializer.fromJson<String>(json['id']),
+      nama: serializer.fromJson<String>(json['nama']),
+      colorKey: serializer.fromJson<String>(json['colorKey']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'nama': serializer.toJson<String>(nama),
+      'colorKey': serializer.toJson<String>(colorKey),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'isDirty': serializer.toJson<bool>(isDirty),
+    };
+  }
+
+  FundSourceRow copyWith({
+    String? id,
+    String? nama,
+    String? colorKey,
+    bool? isActive,
+    Value<String?> createdBy = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? isDirty,
+  }) => FundSourceRow(
+    id: id ?? this.id,
+    nama: nama ?? this.nama,
+    colorKey: colorKey ?? this.colorKey,
+    isActive: isActive ?? this.isActive,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    isDirty: isDirty ?? this.isDirty,
+  );
+  FundSourceRow copyWithCompanion(FundSourcesCompanion data) {
+    return FundSourceRow(
+      id: data.id.present ? data.id.value : this.id,
+      nama: data.nama.present ? data.nama.value : this.nama,
+      colorKey: data.colorKey.present ? data.colorKey.value : this.colorKey,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FundSourceRow(')
+          ..write('id: $id, ')
+          ..write('nama: $nama, ')
+          ..write('colorKey: $colorKey, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('isDirty: $isDirty')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    nama,
+    colorKey,
+    isActive,
+    createdBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    isDirty,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FundSourceRow &&
+          other.id == this.id &&
+          other.nama == this.nama &&
+          other.colorKey == this.colorKey &&
+          other.isActive == this.isActive &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.isDirty == this.isDirty);
+}
+
+class FundSourcesCompanion extends UpdateCompanion<FundSourceRow> {
+  final Value<String> id;
+  final Value<String> nama;
+  final Value<String> colorKey;
+  final Value<bool> isActive;
+  final Value<String?> createdBy;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> isDirty;
+  final Value<int> rowid;
+  const FundSourcesCompanion({
+    this.id = const Value.absent(),
+    this.nama = const Value.absent(),
+    this.colorKey = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FundSourcesCompanion.insert({
+    required String id,
+    required String nama,
+    required String colorKey,
+    this.isActive = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       nama = Value(nama),
+       colorKey = Value(colorKey),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<FundSourceRow> custom({
+    Expression<String>? id,
+    Expression<String>? nama,
+    Expression<String>? colorKey,
+    Expression<bool>? isActive,
+    Expression<String>? createdBy,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? isDirty,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (nama != null) 'nama': nama,
+      if (colorKey != null) 'color_key': colorKey,
+      if (isActive != null) 'is_active': isActive,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FundSourcesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? nama,
+    Value<String>? colorKey,
+    Value<bool>? isActive,
+    Value<String?>? createdBy,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? isDirty,
+    Value<int>? rowid,
+  }) {
+    return FundSourcesCompanion(
+      id: id ?? this.id,
+      nama: nama ?? this.nama,
+      colorKey: colorKey ?? this.colorKey,
+      isActive: isActive ?? this.isActive,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      isDirty: isDirty ?? this.isDirty,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (nama.present) {
+      map['nama'] = Variable<String>(nama.value);
+    }
+    if (colorKey.present) {
+      map['color_key'] = Variable<String>(colorKey.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FundSourcesCompanion(')
+          ..write('id: $id, ')
+          ..write('nama: $nama, ')
+          ..write('colorKey: $colorKey, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FundLedgerEntriesTable extends FundLedgerEntries
+    with TableInfo<$FundLedgerEntriesTable, FundLedgerEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FundLedgerEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fundSourceIdMeta = const VerificationMeta(
+    'fundSourceId',
+  );
+  @override
+  late final GeneratedColumn<String> fundSourceId = GeneratedColumn<String>(
+    'fund_source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tanggalMeta = const VerificationMeta(
+    'tanggal',
+  );
+  @override
+  late final GeneratedColumn<DateTime> tanggal = GeneratedColumn<DateTime>(
+    'tanggal',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tipeMeta = const VerificationMeta('tipe');
+  @override
+  late final GeneratedColumn<String> tipe = GeneratedColumn<String>(
+    'tipe',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _jumlahDeltaMeta = const VerificationMeta(
+    'jumlahDelta',
+  );
+  @override
+  late final GeneratedColumn<int> jumlahDelta = GeneratedColumn<int>(
+    'jumlah_delta',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _referenceTypeMeta = const VerificationMeta(
+    'referenceType',
+  );
+  @override
+  late final GeneratedColumn<String> referenceType = GeneratedColumn<String>(
+    'reference_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _referenceIdMeta = const VerificationMeta(
+    'referenceId',
+  );
+  @override
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+    'reference_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _transferGroupIdMeta = const VerificationMeta(
+    'transferGroupId',
+  );
+  @override
+  late final GeneratedColumn<String> transferGroupId = GeneratedColumn<String>(
+    'transfer_group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _catatanMeta = const VerificationMeta(
+    'catatan',
+  );
+  @override
+  late final GeneratedColumn<String> catatan = GeneratedColumn<String>(
+    'catatan',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    fundSourceId,
+    tanggal,
+    tipe,
+    jumlahDelta,
+    referenceType,
+    referenceId,
+    transferGroupId,
+    catatan,
+    createdBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    isDirty,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fund_ledger_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FundLedgerEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('fund_source_id')) {
+      context.handle(
+        _fundSourceIdMeta,
+        fundSourceId.isAcceptableOrUnknown(
+          data['fund_source_id']!,
+          _fundSourceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fundSourceIdMeta);
+    }
+    if (data.containsKey('tanggal')) {
+      context.handle(
+        _tanggalMeta,
+        tanggal.isAcceptableOrUnknown(data['tanggal']!, _tanggalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tanggalMeta);
+    }
+    if (data.containsKey('tipe')) {
+      context.handle(
+        _tipeMeta,
+        tipe.isAcceptableOrUnknown(data['tipe']!, _tipeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tipeMeta);
+    }
+    if (data.containsKey('jumlah_delta')) {
+      context.handle(
+        _jumlahDeltaMeta,
+        jumlahDelta.isAcceptableOrUnknown(
+          data['jumlah_delta']!,
+          _jumlahDeltaMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_jumlahDeltaMeta);
+    }
+    if (data.containsKey('reference_type')) {
+      context.handle(
+        _referenceTypeMeta,
+        referenceType.isAcceptableOrUnknown(
+          data['reference_type']!,
+          _referenceTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_referenceTypeMeta);
+    }
+    if (data.containsKey('reference_id')) {
+      context.handle(
+        _referenceIdMeta,
+        referenceId.isAcceptableOrUnknown(
+          data['reference_id']!,
+          _referenceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('transfer_group_id')) {
+      context.handle(
+        _transferGroupIdMeta,
+        transferGroupId.isAcceptableOrUnknown(
+          data['transfer_group_id']!,
+          _transferGroupIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('catatan')) {
+      context.handle(
+        _catatanMeta,
+        catatan.isAcceptableOrUnknown(data['catatan']!, _catatanMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FundLedgerEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FundLedgerEntryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      fundSourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fund_source_id'],
+      )!,
+      tanggal: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}tanggal'],
+      )!,
+      tipe: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tipe'],
+      )!,
+      jumlahDelta: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}jumlah_delta'],
+      )!,
+      referenceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_type'],
+      )!,
+      referenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_id'],
+      ),
+      transferGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transfer_group_id'],
+      ),
+      catatan: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}catatan'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+    );
+  }
+
+  @override
+  $FundLedgerEntriesTable createAlias(String alias) {
+    return $FundLedgerEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class FundLedgerEntryRow extends DataClass
+    implements Insertable<FundLedgerEntryRow> {
+  final String id;
+  final String fundSourceId;
+  final DateTime tanggal;
+  final String tipe;
+  final int jumlahDelta;
+  final String referenceType;
+  final String? referenceId;
+  final String? transferGroupId;
+  final String? catatan;
+  final String? createdBy;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool isDirty;
+  const FundLedgerEntryRow({
+    required this.id,
+    required this.fundSourceId,
+    required this.tanggal,
+    required this.tipe,
+    required this.jumlahDelta,
+    required this.referenceType,
+    this.referenceId,
+    this.transferGroupId,
+    this.catatan,
+    this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.isDirty,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['fund_source_id'] = Variable<String>(fundSourceId);
+    map['tanggal'] = Variable<DateTime>(tanggal);
+    map['tipe'] = Variable<String>(tipe);
+    map['jumlah_delta'] = Variable<int>(jumlahDelta);
+    map['reference_type'] = Variable<String>(referenceType);
+    if (!nullToAbsent || referenceId != null) {
+      map['reference_id'] = Variable<String>(referenceId);
+    }
+    if (!nullToAbsent || transferGroupId != null) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId);
+    }
+    if (!nullToAbsent || catatan != null) {
+      map['catatan'] = Variable<String>(catatan);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['is_dirty'] = Variable<bool>(isDirty);
+    return map;
+  }
+
+  FundLedgerEntriesCompanion toCompanion(bool nullToAbsent) {
+    return FundLedgerEntriesCompanion(
+      id: Value(id),
+      fundSourceId: Value(fundSourceId),
+      tanggal: Value(tanggal),
+      tipe: Value(tipe),
+      jumlahDelta: Value(jumlahDelta),
+      referenceType: Value(referenceType),
+      referenceId: referenceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceId),
+      transferGroupId: transferGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transferGroupId),
+      catatan: catatan == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catatan),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      isDirty: Value(isDirty),
+    );
+  }
+
+  factory FundLedgerEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FundLedgerEntryRow(
+      id: serializer.fromJson<String>(json['id']),
+      fundSourceId: serializer.fromJson<String>(json['fundSourceId']),
+      tanggal: serializer.fromJson<DateTime>(json['tanggal']),
+      tipe: serializer.fromJson<String>(json['tipe']),
+      jumlahDelta: serializer.fromJson<int>(json['jumlahDelta']),
+      referenceType: serializer.fromJson<String>(json['referenceType']),
+      referenceId: serializer.fromJson<String?>(json['referenceId']),
+      transferGroupId: serializer.fromJson<String?>(json['transferGroupId']),
+      catatan: serializer.fromJson<String?>(json['catatan']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'fundSourceId': serializer.toJson<String>(fundSourceId),
+      'tanggal': serializer.toJson<DateTime>(tanggal),
+      'tipe': serializer.toJson<String>(tipe),
+      'jumlahDelta': serializer.toJson<int>(jumlahDelta),
+      'referenceType': serializer.toJson<String>(referenceType),
+      'referenceId': serializer.toJson<String?>(referenceId),
+      'transferGroupId': serializer.toJson<String?>(transferGroupId),
+      'catatan': serializer.toJson<String?>(catatan),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'isDirty': serializer.toJson<bool>(isDirty),
+    };
+  }
+
+  FundLedgerEntryRow copyWith({
+    String? id,
+    String? fundSourceId,
+    DateTime? tanggal,
+    String? tipe,
+    int? jumlahDelta,
+    String? referenceType,
+    Value<String?> referenceId = const Value.absent(),
+    Value<String?> transferGroupId = const Value.absent(),
+    Value<String?> catatan = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? isDirty,
+  }) => FundLedgerEntryRow(
+    id: id ?? this.id,
+    fundSourceId: fundSourceId ?? this.fundSourceId,
+    tanggal: tanggal ?? this.tanggal,
+    tipe: tipe ?? this.tipe,
+    jumlahDelta: jumlahDelta ?? this.jumlahDelta,
+    referenceType: referenceType ?? this.referenceType,
+    referenceId: referenceId.present ? referenceId.value : this.referenceId,
+    transferGroupId: transferGroupId.present
+        ? transferGroupId.value
+        : this.transferGroupId,
+    catatan: catatan.present ? catatan.value : this.catatan,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    isDirty: isDirty ?? this.isDirty,
+  );
+  FundLedgerEntryRow copyWithCompanion(FundLedgerEntriesCompanion data) {
+    return FundLedgerEntryRow(
+      id: data.id.present ? data.id.value : this.id,
+      fundSourceId: data.fundSourceId.present
+          ? data.fundSourceId.value
+          : this.fundSourceId,
+      tanggal: data.tanggal.present ? data.tanggal.value : this.tanggal,
+      tipe: data.tipe.present ? data.tipe.value : this.tipe,
+      jumlahDelta: data.jumlahDelta.present
+          ? data.jumlahDelta.value
+          : this.jumlahDelta,
+      referenceType: data.referenceType.present
+          ? data.referenceType.value
+          : this.referenceType,
+      referenceId: data.referenceId.present
+          ? data.referenceId.value
+          : this.referenceId,
+      transferGroupId: data.transferGroupId.present
+          ? data.transferGroupId.value
+          : this.transferGroupId,
+      catatan: data.catatan.present ? data.catatan.value : this.catatan,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FundLedgerEntryRow(')
+          ..write('id: $id, ')
+          ..write('fundSourceId: $fundSourceId, ')
+          ..write('tanggal: $tanggal, ')
+          ..write('tipe: $tipe, ')
+          ..write('jumlahDelta: $jumlahDelta, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('transferGroupId: $transferGroupId, ')
+          ..write('catatan: $catatan, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('isDirty: $isDirty')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    fundSourceId,
+    tanggal,
+    tipe,
+    jumlahDelta,
+    referenceType,
+    referenceId,
+    transferGroupId,
+    catatan,
+    createdBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    isDirty,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FundLedgerEntryRow &&
+          other.id == this.id &&
+          other.fundSourceId == this.fundSourceId &&
+          other.tanggal == this.tanggal &&
+          other.tipe == this.tipe &&
+          other.jumlahDelta == this.jumlahDelta &&
+          other.referenceType == this.referenceType &&
+          other.referenceId == this.referenceId &&
+          other.transferGroupId == this.transferGroupId &&
+          other.catatan == this.catatan &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.isDirty == this.isDirty);
+}
+
+class FundLedgerEntriesCompanion extends UpdateCompanion<FundLedgerEntryRow> {
+  final Value<String> id;
+  final Value<String> fundSourceId;
+  final Value<DateTime> tanggal;
+  final Value<String> tipe;
+  final Value<int> jumlahDelta;
+  final Value<String> referenceType;
+  final Value<String?> referenceId;
+  final Value<String?> transferGroupId;
+  final Value<String?> catatan;
+  final Value<String?> createdBy;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> isDirty;
+  final Value<int> rowid;
+  const FundLedgerEntriesCompanion({
+    this.id = const Value.absent(),
+    this.fundSourceId = const Value.absent(),
+    this.tanggal = const Value.absent(),
+    this.tipe = const Value.absent(),
+    this.jumlahDelta = const Value.absent(),
+    this.referenceType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
+    this.catatan = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FundLedgerEntriesCompanion.insert({
+    required String id,
+    required String fundSourceId,
+    required DateTime tanggal,
+    required String tipe,
+    required int jumlahDelta,
+    required String referenceType,
+    this.referenceId = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
+    this.catatan = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       fundSourceId = Value(fundSourceId),
+       tanggal = Value(tanggal),
+       tipe = Value(tipe),
+       jumlahDelta = Value(jumlahDelta),
+       referenceType = Value(referenceType),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<FundLedgerEntryRow> custom({
+    Expression<String>? id,
+    Expression<String>? fundSourceId,
+    Expression<DateTime>? tanggal,
+    Expression<String>? tipe,
+    Expression<int>? jumlahDelta,
+    Expression<String>? referenceType,
+    Expression<String>? referenceId,
+    Expression<String>? transferGroupId,
+    Expression<String>? catatan,
+    Expression<String>? createdBy,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? isDirty,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (fundSourceId != null) 'fund_source_id': fundSourceId,
+      if (tanggal != null) 'tanggal': tanggal,
+      if (tipe != null) 'tipe': tipe,
+      if (jumlahDelta != null) 'jumlah_delta': jumlahDelta,
+      if (referenceType != null) 'reference_type': referenceType,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (transferGroupId != null) 'transfer_group_id': transferGroupId,
+      if (catatan != null) 'catatan': catatan,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FundLedgerEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? fundSourceId,
+    Value<DateTime>? tanggal,
+    Value<String>? tipe,
+    Value<int>? jumlahDelta,
+    Value<String>? referenceType,
+    Value<String?>? referenceId,
+    Value<String?>? transferGroupId,
+    Value<String?>? catatan,
+    Value<String?>? createdBy,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? isDirty,
+    Value<int>? rowid,
+  }) {
+    return FundLedgerEntriesCompanion(
+      id: id ?? this.id,
+      fundSourceId: fundSourceId ?? this.fundSourceId,
+      tanggal: tanggal ?? this.tanggal,
+      tipe: tipe ?? this.tipe,
+      jumlahDelta: jumlahDelta ?? this.jumlahDelta,
+      referenceType: referenceType ?? this.referenceType,
+      referenceId: referenceId ?? this.referenceId,
+      transferGroupId: transferGroupId ?? this.transferGroupId,
+      catatan: catatan ?? this.catatan,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      isDirty: isDirty ?? this.isDirty,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (fundSourceId.present) {
+      map['fund_source_id'] = Variable<String>(fundSourceId.value);
+    }
+    if (tanggal.present) {
+      map['tanggal'] = Variable<DateTime>(tanggal.value);
+    }
+    if (tipe.present) {
+      map['tipe'] = Variable<String>(tipe.value);
+    }
+    if (jumlahDelta.present) {
+      map['jumlah_delta'] = Variable<int>(jumlahDelta.value);
+    }
+    if (referenceType.present) {
+      map['reference_type'] = Variable<String>(referenceType.value);
+    }
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
+    }
+    if (transferGroupId.present) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId.value);
+    }
+    if (catatan.present) {
+      map['catatan'] = Variable<String>(catatan.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FundLedgerEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('fundSourceId: $fundSourceId, ')
+          ..write('tanggal: $tanggal, ')
+          ..write('tipe: $tipe, ')
+          ..write('jumlahDelta: $jumlahDelta, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('transferGroupId: $transferGroupId, ')
+          ..write('catatan: $catatan, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3051,6 +4554,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PurchasesTable purchases = $PurchasesTable(this);
   late final $PaymentsTable payments = $PaymentsTable(this);
   late final $BudgetEntriesTable budgetEntries = $BudgetEntriesTable(this);
+  late final $FundSourcesTable fundSources = $FundSourcesTable(this);
+  late final $FundLedgerEntriesTable fundLedgerEntries =
+      $FundLedgerEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3060,6 +4566,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     purchases,
     payments,
     budgetEntries,
+    fundSources,
+    fundLedgerEntries,
   ];
 }
 
@@ -3410,6 +4918,7 @@ typedef $$PurchasesTableCreateCompanionBuilder =
       Value<int?> hargaBeli,
       required DateTime tanggalBeli,
       Value<String?> catatan,
+      Value<String?> fundSourceId,
       Value<String?> createdBy,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -3427,6 +4936,7 @@ typedef $$PurchasesTableUpdateCompanionBuilder =
       Value<int?> hargaBeli,
       Value<DateTime> tanggalBeli,
       Value<String?> catatan,
+      Value<String?> fundSourceId,
       Value<String?> createdBy,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -3481,6 +4991,11 @@ class $$PurchasesTableFilterComposer
 
   ColumnFilters<String> get catatan => $composableBuilder(
     column: $table.catatan,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3559,6 +5074,11 @@ class $$PurchasesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdBy => $composableBuilder(
     column: $table.createdBy,
     builder: (column) => ColumnOrderings(column),
@@ -3624,6 +5144,11 @@ class $$PurchasesTableAnnotationComposer
   GeneratedColumn<String> get catatan =>
       $composableBuilder(column: $table.catatan, builder: (column) => column);
 
+  GeneratedColumn<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
@@ -3679,6 +5204,7 @@ class $$PurchasesTableTableManager
                 Value<int?> hargaBeli = const Value.absent(),
                 Value<DateTime> tanggalBeli = const Value.absent(),
                 Value<String?> catatan = const Value.absent(),
+                Value<String?> fundSourceId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3694,6 +5220,7 @@ class $$PurchasesTableTableManager
                 hargaBeli: hargaBeli,
                 tanggalBeli: tanggalBeli,
                 catatan: catatan,
+                fundSourceId: fundSourceId,
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3711,6 +5238,7 @@ class $$PurchasesTableTableManager
                 Value<int?> hargaBeli = const Value.absent(),
                 required DateTime tanggalBeli,
                 Value<String?> catatan = const Value.absent(),
+                Value<String?> fundSourceId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -3726,6 +5254,7 @@ class $$PurchasesTableTableManager
                 hargaBeli: hargaBeli,
                 tanggalBeli: tanggalBeli,
                 catatan: catatan,
+                fundSourceId: fundSourceId,
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3769,6 +5298,7 @@ typedef $$PaymentsTableCreateCompanionBuilder =
       Value<String> sumber,
       Value<String> statusVerifikasi,
       Value<String?> buktiFotoUrl,
+      Value<String?> fundSourceId,
       Value<String?> createdBy,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -3787,6 +5317,7 @@ typedef $$PaymentsTableUpdateCompanionBuilder =
       Value<String> sumber,
       Value<String> statusVerifikasi,
       Value<String?> buktiFotoUrl,
+      Value<String?> fundSourceId,
       Value<String?> createdBy,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -3846,6 +5377,11 @@ class $$PaymentsTableFilterComposer
 
   ColumnFilters<String> get buktiFotoUrl => $composableBuilder(
     column: $table.buktiFotoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3929,6 +5465,11 @@ class $$PaymentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdBy => $composableBuilder(
     column: $table.createdBy,
     builder: (column) => ColumnOrderings(column),
@@ -3999,6 +5540,11 @@ class $$PaymentsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
@@ -4055,6 +5601,7 @@ class $$PaymentsTableTableManager
                 Value<String> sumber = const Value.absent(),
                 Value<String> statusVerifikasi = const Value.absent(),
                 Value<String?> buktiFotoUrl = const Value.absent(),
+                Value<String?> fundSourceId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4071,6 +5618,7 @@ class $$PaymentsTableTableManager
                 sumber: sumber,
                 statusVerifikasi: statusVerifikasi,
                 buktiFotoUrl: buktiFotoUrl,
+                fundSourceId: fundSourceId,
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4089,6 +5637,7 @@ class $$PaymentsTableTableManager
                 Value<String> sumber = const Value.absent(),
                 Value<String> statusVerifikasi = const Value.absent(),
                 Value<String?> buktiFotoUrl = const Value.absent(),
+                Value<String?> fundSourceId = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -4105,6 +5654,7 @@ class $$PaymentsTableTableManager
                 sumber: sumber,
                 statusVerifikasi: statusVerifikasi,
                 buktiFotoUrl: buktiFotoUrl,
+                fundSourceId: fundSourceId,
                 createdBy: createdBy,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4490,6 +6040,676 @@ typedef $$BudgetEntriesTableProcessedTableManager =
       BudgetEntryRow,
       PrefetchHooks Function()
     >;
+typedef $$FundSourcesTableCreateCompanionBuilder =
+    FundSourcesCompanion Function({
+      required String id,
+      required String nama,
+      required String colorKey,
+      Value<bool> isActive,
+      Value<String?> createdBy,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> isDirty,
+      Value<int> rowid,
+    });
+typedef $$FundSourcesTableUpdateCompanionBuilder =
+    FundSourcesCompanion Function({
+      Value<String> id,
+      Value<String> nama,
+      Value<String> colorKey,
+      Value<bool> isActive,
+      Value<String?> createdBy,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> isDirty,
+      Value<int> rowid,
+    });
+
+class $$FundSourcesTableFilterComposer
+    extends Composer<_$AppDatabase, $FundSourcesTable> {
+  $$FundSourcesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nama => $composableBuilder(
+    column: $table.nama,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorKey => $composableBuilder(
+    column: $table.colorKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FundSourcesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FundSourcesTable> {
+  $$FundSourcesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nama => $composableBuilder(
+    column: $table.nama,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorKey => $composableBuilder(
+    column: $table.colorKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FundSourcesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FundSourcesTable> {
+  $$FundSourcesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get nama =>
+      $composableBuilder(column: $table.nama, builder: (column) => column);
+
+  GeneratedColumn<String> get colorKey =>
+      $composableBuilder(column: $table.colorKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+}
+
+class $$FundSourcesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FundSourcesTable,
+          FundSourceRow,
+          $$FundSourcesTableFilterComposer,
+          $$FundSourcesTableOrderingComposer,
+          $$FundSourcesTableAnnotationComposer,
+          $$FundSourcesTableCreateCompanionBuilder,
+          $$FundSourcesTableUpdateCompanionBuilder,
+          (
+            FundSourceRow,
+            BaseReferences<_$AppDatabase, $FundSourcesTable, FundSourceRow>,
+          ),
+          FundSourceRow,
+          PrefetchHooks Function()
+        > {
+  $$FundSourcesTableTableManager(_$AppDatabase db, $FundSourcesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FundSourcesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FundSourcesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FundSourcesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> nama = const Value.absent(),
+                Value<String> colorKey = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FundSourcesCompanion(
+                id: id,
+                nama: nama,
+                colorKey: colorKey,
+                isActive: isActive,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                isDirty: isDirty,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String nama,
+                required String colorKey,
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FundSourcesCompanion.insert(
+                id: id,
+                nama: nama,
+                colorKey: colorKey,
+                isActive: isActive,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                isDirty: isDirty,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FundSourcesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FundSourcesTable,
+      FundSourceRow,
+      $$FundSourcesTableFilterComposer,
+      $$FundSourcesTableOrderingComposer,
+      $$FundSourcesTableAnnotationComposer,
+      $$FundSourcesTableCreateCompanionBuilder,
+      $$FundSourcesTableUpdateCompanionBuilder,
+      (
+        FundSourceRow,
+        BaseReferences<_$AppDatabase, $FundSourcesTable, FundSourceRow>,
+      ),
+      FundSourceRow,
+      PrefetchHooks Function()
+    >;
+typedef $$FundLedgerEntriesTableCreateCompanionBuilder =
+    FundLedgerEntriesCompanion Function({
+      required String id,
+      required String fundSourceId,
+      required DateTime tanggal,
+      required String tipe,
+      required int jumlahDelta,
+      required String referenceType,
+      Value<String?> referenceId,
+      Value<String?> transferGroupId,
+      Value<String?> catatan,
+      Value<String?> createdBy,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> isDirty,
+      Value<int> rowid,
+    });
+typedef $$FundLedgerEntriesTableUpdateCompanionBuilder =
+    FundLedgerEntriesCompanion Function({
+      Value<String> id,
+      Value<String> fundSourceId,
+      Value<DateTime> tanggal,
+      Value<String> tipe,
+      Value<int> jumlahDelta,
+      Value<String> referenceType,
+      Value<String?> referenceId,
+      Value<String?> transferGroupId,
+      Value<String?> catatan,
+      Value<String?> createdBy,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> isDirty,
+      Value<int> rowid,
+    });
+
+class $$FundLedgerEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $FundLedgerEntriesTable> {
+  $$FundLedgerEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get tanggal => $composableBuilder(
+    column: $table.tanggal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tipe => $composableBuilder(
+    column: $table.tipe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get jumlahDelta => $composableBuilder(
+    column: $table.jumlahDelta,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get catatan => $composableBuilder(
+    column: $table.catatan,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FundLedgerEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FundLedgerEntriesTable> {
+  $$FundLedgerEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get tanggal => $composableBuilder(
+    column: $table.tanggal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tipe => $composableBuilder(
+    column: $table.tipe,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get jumlahDelta => $composableBuilder(
+    column: $table.jumlahDelta,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get catatan => $composableBuilder(
+    column: $table.catatan,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FundLedgerEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FundLedgerEntriesTable> {
+  $$FundLedgerEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fundSourceId => $composableBuilder(
+    column: $table.fundSourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get tanggal =>
+      $composableBuilder(column: $table.tanggal, builder: (column) => column);
+
+  GeneratedColumn<String> get tipe =>
+      $composableBuilder(column: $table.tipe, builder: (column) => column);
+
+  GeneratedColumn<int> get jumlahDelta => $composableBuilder(
+    column: $table.jumlahDelta,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get catatan =>
+      $composableBuilder(column: $table.catatan, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+}
+
+class $$FundLedgerEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FundLedgerEntriesTable,
+          FundLedgerEntryRow,
+          $$FundLedgerEntriesTableFilterComposer,
+          $$FundLedgerEntriesTableOrderingComposer,
+          $$FundLedgerEntriesTableAnnotationComposer,
+          $$FundLedgerEntriesTableCreateCompanionBuilder,
+          $$FundLedgerEntriesTableUpdateCompanionBuilder,
+          (
+            FundLedgerEntryRow,
+            BaseReferences<
+              _$AppDatabase,
+              $FundLedgerEntriesTable,
+              FundLedgerEntryRow
+            >,
+          ),
+          FundLedgerEntryRow,
+          PrefetchHooks Function()
+        > {
+  $$FundLedgerEntriesTableTableManager(
+    _$AppDatabase db,
+    $FundLedgerEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FundLedgerEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FundLedgerEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FundLedgerEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> fundSourceId = const Value.absent(),
+                Value<DateTime> tanggal = const Value.absent(),
+                Value<String> tipe = const Value.absent(),
+                Value<int> jumlahDelta = const Value.absent(),
+                Value<String> referenceType = const Value.absent(),
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> transferGroupId = const Value.absent(),
+                Value<String?> catatan = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FundLedgerEntriesCompanion(
+                id: id,
+                fundSourceId: fundSourceId,
+                tanggal: tanggal,
+                tipe: tipe,
+                jumlahDelta: jumlahDelta,
+                referenceType: referenceType,
+                referenceId: referenceId,
+                transferGroupId: transferGroupId,
+                catatan: catatan,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                isDirty: isDirty,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String fundSourceId,
+                required DateTime tanggal,
+                required String tipe,
+                required int jumlahDelta,
+                required String referenceType,
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> transferGroupId = const Value.absent(),
+                Value<String?> catatan = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FundLedgerEntriesCompanion.insert(
+                id: id,
+                fundSourceId: fundSourceId,
+                tanggal: tanggal,
+                tipe: tipe,
+                jumlahDelta: jumlahDelta,
+                referenceType: referenceType,
+                referenceId: referenceId,
+                transferGroupId: transferGroupId,
+                catatan: catatan,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                isDirty: isDirty,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FundLedgerEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FundLedgerEntriesTable,
+      FundLedgerEntryRow,
+      $$FundLedgerEntriesTableFilterComposer,
+      $$FundLedgerEntriesTableOrderingComposer,
+      $$FundLedgerEntriesTableAnnotationComposer,
+      $$FundLedgerEntriesTableCreateCompanionBuilder,
+      $$FundLedgerEntriesTableUpdateCompanionBuilder,
+      (
+        FundLedgerEntryRow,
+        BaseReferences<
+          _$AppDatabase,
+          $FundLedgerEntriesTable,
+          FundLedgerEntryRow
+        >,
+      ),
+      FundLedgerEntryRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4502,4 +6722,8 @@ class $AppDatabaseManager {
       $$PaymentsTableTableManager(_db, _db.payments);
   $$BudgetEntriesTableTableManager get budgetEntries =>
       $$BudgetEntriesTableTableManager(_db, _db.budgetEntries);
+  $$FundSourcesTableTableManager get fundSources =>
+      $$FundSourcesTableTableManager(_db, _db.fundSources);
+  $$FundLedgerEntriesTableTableManager get fundLedgerEntries =>
+      $$FundLedgerEntriesTableTableManager(_db, _db.fundLedgerEntries);
 }
