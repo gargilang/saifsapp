@@ -27,3 +27,4 @@ supabase/.temp/
 .env
 *.env
 .vercel
+.worktrees/
