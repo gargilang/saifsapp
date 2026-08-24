@@ -1,7 +1,7 @@
 # Migrasi Data r2 dan Sumber Dana (Design Spec)
 
 Tanggal: 2026-08-24
-Status: Desain disetujui di chat, menunggu review spec
+Status: Disetujui user
 Sumber data:
 
 - `ref/DAFTAR KREDIT BARANG r2.xlsx`
@@ -90,7 +90,9 @@ memakai konteks urutan bisnis, bukan menerima serial Excel secara buta:
   jelas, termasuk 9 Juni dan 11 Juni yang tersimpan sebagai 6 September dan
   6 November.
 - Tanggal yang tetap tidak mungkin setelah normalisasi dimasukkan ke sheet
-  `VALIDASI` dan menghentikan impor sampai dikoreksi.
+  `VALIDASI`. Import hanya boleh lanjut bila tanggal dikoreksi atau baris tersebut
+  ditandai sebagai pengecualian yang diterima; pengecualian tetap terlihat agar
+  klien dapat mengubahnya manual kemudian.
 - Importer tidak boleh memakai tanggal fallback seperti 1 Januari untuk cell
   kosong atau tidak valid.
 
@@ -200,25 +202,34 @@ fund_ledger_entries (
 Nilai `tipe`:
 
 - `saldo_awal`: saldo pembuka saat cutover.
-- `transaksi`: penambahan piutang dari transaksi baru.
-- `pembayaran`: pengurangan akibat pembayaran nasabah.
 - `alih_masuk` dan `alih_keluar`: pasangan alih kepemilikan.
 - `penyesuaian`: koreksi dengan alasan wajib.
 
-`reference_type` mengidentifikasi `migration`, `purchase`, `payment`, `transfer`,
-atau `adjustment`. Row otomatis dari transaksi/pembayaran menggunakan pasangan
-`reference_type + reference_id` yang unik agar penyimpanan ulang bersifat
-idempotent dan edit tidak menggandakan saldo.
+`reference_type` mengidentifikasi `migration`, `transfer`, atau `adjustment`.
+Pasangan `alih_masuk` dan `alih_keluar` memakai `transfer_group_id` yang sama.
+ID row dibuat client-side dan dipakai kembali saat retry agar penyimpanan
+bersifat idempotent.
 
-Saldo sumber dana dihitung dari jumlah seluruh `jumlah_delta` aktif dan tidak
-disimpan sebagai angka mutable di `fund_sources`.
+Transaksi dan pembayaran tidak diduplikasi ke ledger karena kedua tabel tersebut
+sudah menjadi audit log. Saldo sumber dana dihitung dan tidak disimpan sebagai
+angka mutable di `fund_sources`:
+
+```text
+saldo sumber = SUM(ledger aktif)
+             + SUM(harga_jual transaksi aktif setelah cutover untuk sumber)
+             - SUM(pembayaran verified aktif setelah cutover untuk sumber)
+```
+
+Cara ini membuat edit, soft delete, dan retry sync pada transaksi/pembayaran
+langsung tercermin satu kali tanpa risiko membuat entry ledger ganda.
 
 ### 5.3 Atribusi transaksi dan pembayaran
 
-Transaksi dan pembayaran yang dibuat setelah cutover menyimpan sumber dana yang
-dipilih. Versi awal mendukung satu sumber per transaksi/pembayaran. Nominal ledger
-transaksi sama dengan `harga_jual`, karena yang dibagi adalah kepemilikan piutang,
-bukan biaya pembelian. Nominal ledger pembayaran sama dengan `jumlah` pembayaran.
+Transaksi dan pembayaran yang dibuat setelah cutover menyimpan `fund_source_id`
+yang dipilih. Versi awal mendukung satu sumber per transaksi/pembayaran. Nilai
+yang diperhitungkan dari transaksi sama dengan `harga_jual`, karena yang dibagi
+adalah kepemilikan piutang, bukan biaya pembelian. Nilai yang dikurangkan dari
+pembayaran sama dengan `jumlah` pembayaran verified.
 
 Data transaksi lama tidak diberi sumber dana secara retroaktif karena klien hanya
 memberikan angka agregat. Dua row `saldo_awal` mewakili seluruh piutang lama.
@@ -227,9 +238,10 @@ sumber yang dikurangi. Untuk transaksi baru, form pembayaran dapat memilih
 default dari sumber transaksi yang sedang ditutup oleh FIFO, tetapi pilihan tetap
 ditampilkan dan dapat dikoreksi sebelum disimpan.
 
-Penyimpanan transaksi atau pembayaran beserta ledger terkait harus atomik di
-Supabase. Pada Android offline, kedua row ditulis dalam satu transaksi Drift dan
-disinkronkan secara idempotent.
+Karena sumber tersimpan pada row transaksi atau pembayaran yang sama, perubahan
+nominal dan atribusi bersifat atomik tanpa write lintas tabel. Pasangan alih modal
+dan penyesuaian tetap harus ditulis atomik melalui transaksi Drift atau RPC
+Supabase.
 
 ## 6. Alur Pengguna
 
@@ -267,8 +279,8 @@ Form tambah transaksi baru menambahkan segmented control `Sumber dana` dengan
 pilihan Sandi dan Ika. Pilihan wajib diisi. Nominal atribusi ditampilkan sebagai
 harga jual dan tidak perlu diketik ulang pada versi awal.
 
-Form edit menampilkan sumber saat ini. Mengganti sumber membuat pasangan koreksi
-ledger secara atomik tanpa menghapus riwayat audit.
+Form edit menampilkan sumber saat ini. Mengganti sumber memperbarui atribusi pada
+transaksi dan dicatat oleh metadata `updated_at`/`created_by` yang sudah ada.
 
 Transaksi hasil migrasi ditandai sebagai bagian dari saldo awal dan tidak
 menampilkan atribusi per transaksi yang palsu.
@@ -304,9 +316,9 @@ Urutan sync menjaga referensi:
 4. `fund_ledger_entries`
 5. `budget_entries`
 
-Ledger otomatis memakai ID deterministik atau unique constraint referensi agar
-retry sync tidak membuat entry ganda. Konflik alih modal dan penyesuaian mengikuti
-LWW per row, tetapi setiap operasi membuat row baru sehingga histori tidak hilang.
+Ledger memakai UUID client-side yang stabil selama retry sync agar entry tidak
+berganda. Konflik alih modal dan penyesuaian mengikuti LWW per row, tetapi setiap
+operasi membuat row baru sehingga histori tidak hilang.
 
 ## 8. Reset dan Migrasi Production
 
@@ -343,7 +355,8 @@ Cutover dinyatakan berhasil hanya bila:
 - Anggaran dan dashboard menampilkan total yang konsisten.
 - Web dapat membuat transaksi, pembayaran, alih modal, dan penyesuaian.
 - Android dapat melakukan operasi yang sama saat offline lalu sync tanpa duplikasi.
-- Edit dan retry sync tidak menggandakan ledger.
+- Edit transaksi/pembayaran tidak menggandakan pengaruhnya terhadap saldo sumber.
+- Retry sync tidak menggandakan alih modal atau penyesuaian ledger.
 - Warna Sandi dan Ika benar pada tema terang dan gelap, dengan label teks tetap
   terbaca dan tidak saling tumpang tindih pada viewport ponsel.
 
@@ -360,9 +373,9 @@ Cutover dinyatakan berhasil hanya bila:
 
 ### Repository dan database
 
-- Simpan/edit/hapus transaksi membuat ledger idempotent.
-- Simpan/edit/hapus pembayaran membuat ledger idempotent.
-- Operasi transaksi dan ledger atomik pada Supabase dan Drift.
+- Simpan/edit/hapus transaksi mengubah saldo turunan tepat satu kali.
+- Simpan/edit/hapus pembayaran mengubah saldo turunan tepat satu kali.
+- Pasangan alih modal/penyesuaian atomik pada Supabase dan Drift.
 - Migrasi Drift mempertahankan data lokal yang masih relevan.
 - Sync retry, pagination, soft delete, dan watermark mencakup tabel baru.
 
