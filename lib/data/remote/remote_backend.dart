@@ -1,5 +1,8 @@
+import '../../core/utils/dates.dart';
 import '../models/budget_entry.dart';
 import '../models/customer.dart';
+import '../models/fund_ledger_entry.dart';
+import '../models/fund_source.dart';
 import '../models/payment.dart';
 import '../models/purchase.dart';
 import '../repositories/backend.dart';
@@ -11,44 +14,79 @@ class RemoteBackend implements Backend {
   RemoteBackend(this.remote);
 
   Future<List<T>> _read<T>(
-          String table, T Function(Map<String, dynamic>) fromJson) async =>
-      [
-        for (final j in await remote.fetchSince(table, null))
-          if (j['deleted_at'] == null) fromJson(j),
-      ];
+    String table,
+    T Function(Map<String, dynamic>) fromJson,
+  ) async => [
+    for (final j in await remote.fetchSince(table, null))
+      if (j['deleted_at'] == null) fromJson(j),
+  ];
 
   @override
-  Future<List<Customer>> readCustomers() => _read('customers', Customer.fromJson);
+  Future<List<Customer>> readCustomers() =>
+      _read('customers', Customer.fromJson);
   @override
-  Future<List<Purchase>> readPurchases() => _read('purchases', Purchase.fromJson);
+  Future<List<Purchase>> readPurchases() =>
+      _read('purchases', Purchase.fromJson);
   @override
   Future<List<Payment>> readPayments() => _read('payments', Payment.fromJson);
   @override
   Future<List<BudgetEntry>> readBudgetEntries() =>
       _read('budget_entries', BudgetEntry.fromJson);
+  @override
+  Future<List<FundSource>> readFundSources() =>
+      _read('fund_sources', FundSource.fromJson);
+  @override
+  Future<List<FundLedgerEntry>> readFundLedgerEntries() =>
+      _read('fund_ledger_entries', FundLedgerEntry.fromJson);
 
   @override
-  Future<void> writeCustomer(Customer v) => remote.upsert('customers', [v.toJson()]);
+  Future<void> writeCustomer(Customer v) =>
+      remote.upsert('customers', [v.toJson()]);
   @override
-  Future<void> writePurchase(Purchase v) => remote.upsert('purchases', [v.toJson()]);
+  Future<void> writePurchase(Purchase v) =>
+      remote.upsert('purchases', [v.toJson()]);
   @override
-  Future<void> writePayment(Payment v) => remote.upsert('payments', [v.toJson()]);
+  Future<void> writePayment(Payment v) =>
+      remote.upsert('payments', [v.toJson()]);
   @override
   Future<void> writeBudgetEntry(BudgetEntry v) =>
       remote.upsert('budget_entries', [v.toJson()]);
+  @override
+  Future<void> writeFundTransfer(FundTransfer transfer) async {
+    final keluar = transfer.keluar;
+    final masuk = transfer.masuk;
+    final groupId = keluar.transferGroupId;
+    if (groupId == null || groupId != masuk.transferGroupId) {
+      throw ArgumentError('Transfer group tidak valid');
+    }
+    await remote.rpc('record_fund_transfer', {
+      'p_group_id': groupId,
+      'p_out_id': keluar.id,
+      'p_in_id': masuk.id,
+      'p_from_source_id': keluar.fundSourceId,
+      'p_to_source_id': masuk.fundSourceId,
+      'p_amount': masuk.jumlahDelta,
+      'p_tanggal': dateOnly(keluar.tanggal),
+      'p_kind': keluar.referenceType == 'adjustment'
+          ? 'adjustment'
+          : 'transfer',
+      'p_catatan': keluar.catatan,
+    });
+  }
 
   /// Soft delete: UPDATE saja, jangan upsert.
   /// Upsert dengan payload parsial bisa berubah jadi INSERT kalau row tidak
   /// ditemukan (mis. karena RLS), lalu gagal karena kolom NOT NULL lain
   /// (mis. `nama`) tidak disertakan.
-  Future<void> _delete(String table, String id, DateTime at) =>
-      remote.update(table, id, {
-        'deleted_at': at.toIso8601String(),
-        'updated_at': at.toIso8601String(),
-      });
+  Future<void> _delete(String table, String id, DateTime at) => remote.update(
+    table,
+    id,
+    {'deleted_at': at.toIso8601String(), 'updated_at': at.toIso8601String()},
+  );
 
   @override
-  Future<void> deleteCustomer(String id, DateTime at) => _delete('customers', id, at);
+  Future<void> deleteCustomer(String id, DateTime at) =>
+      _delete('customers', id, at);
 
   @override
   Future<void> deleteCustomerCascade(String id, DateTime at) async {
@@ -64,9 +102,11 @@ class RemoteBackend implements Backend {
   }
 
   @override
-  Future<void> deletePurchase(String id, DateTime at) => _delete('purchases', id, at);
+  Future<void> deletePurchase(String id, DateTime at) =>
+      _delete('purchases', id, at);
   @override
-  Future<void> deletePayment(String id, DateTime at) => _delete('payments', id, at);
+  Future<void> deletePayment(String id, DateTime at) =>
+      _delete('payments', id, at);
   @override
   Future<void> deleteBudgetEntry(String id, DateTime at) =>
       _delete('budget_entries', id, at);

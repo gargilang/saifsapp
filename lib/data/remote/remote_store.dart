@@ -8,12 +8,18 @@ abstract class RemoteStore {
   Future<List<Map<String, dynamic>>> fetchSince(String table, DateTime? since);
   Future<void> upsert(String table, List<Map<String, dynamic>> rows);
 
+  /// Panggil Postgres RPC dan kembalikan object JSON hasilnya.
+  Future<Map<String, dynamic>> rpc(String name, Map<String, dynamic> params);
+
   /// Update satu row berdasarkan [id]. Hanya kirim kolom yang mau diubah.
   Future<void> update(String table, String id, Map<String, dynamic> values);
 
   /// Update semua row dengan customer_id = [customerId].
   Future<void> updateByCustomer(
-      String table, String customerId, Map<String, dynamic> values);
+    String table,
+    String customerId,
+    Map<String, dynamic> values,
+  );
 
   /// Panggil Supabase Edge Function.
   /// [method] default 'POST'. Gunakan 'GET' untuk operasi baca tanpa body.
@@ -48,13 +54,24 @@ class SupabaseRemoteStore implements RemoteStore {
       _client.from(table).upsert(rows);
 
   @override
+  Future<Map<String, dynamic>> rpc(
+    String name,
+    Map<String, dynamic> params,
+  ) async {
+    final result = await _client.rpc(name, params: params);
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  @override
   Future<void> update(String table, String id, Map<String, dynamic> values) =>
       _client.from(table).update(values).eq('id', id);
 
   @override
   Future<void> updateByCustomer(
-          String table, String customerId, Map<String, dynamic> values) =>
-      _client.from(table).update(values).eq('customer_id', customerId);
+    String table,
+    String customerId,
+    Map<String, dynamic> values,
+  ) => _client.from(table).update(values).eq('customer_id', customerId);
 
   @override
   Future<Map<String, dynamic>> callFunction(
