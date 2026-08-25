@@ -15,7 +15,7 @@ void callbackDispatcher() {
     try {
       await Supabase.initialize(
         url: const String.fromEnvironment('SUPABASE_URL'),
-        anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+        publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
       );
       final db = AppDatabase();
       final engine = SyncEngine(db, SupabaseRemoteStore(Supabase.instance.client),

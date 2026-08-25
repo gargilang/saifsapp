@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/backend.dart';
 
 // Dummy agar Provider tetap ada tapi tidak dipakai di web.
-class _FakeDb {}
+class WebDatabaseStub {}
 
-final appDatabaseProvider = Provider<_FakeDb>((_) => _FakeDb());
+final appDatabaseProvider = Provider<WebDatabaseStub>((_) => WebDatabaseStub());
 
-Backend buildLocalBackend(_FakeDb db) =>
+Backend buildLocalBackend(WebDatabaseStub db) =>
     throw UnsupportedError('Local backend tidak tersedia di web');
