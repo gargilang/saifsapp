@@ -28,3 +28,6 @@ supabase/.temp/
 *.env
 .vercel
 .worktrees/
+
+# Backup lokal wajib sebelum reseed production; dapat memuat data nasabah.
+backups/
