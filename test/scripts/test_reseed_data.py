@@ -153,6 +153,12 @@ class ReseedSafetyTest(unittest.TestCase):
         ]
         self.assertEqual([sql.index(statement) for statement in delete_order], sorted(sql.index(statement) for statement in delete_order))
 
+    def test_safeupdate_fix_keeps_every_delete_scoped(self):
+        sql = (ROOT / "supabase" / "migrations" / "0007_fix_reseed_safe_delete.sql").read_text().lower()
+
+        for table in BUSINESS_TABLES:
+            self.assertIn(f"delete from public.{table} where true;", sql)
+
 
 if __name__ == "__main__":
     unittest.main()

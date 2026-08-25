@@ -319,7 +319,20 @@ class SupabaseRestClient:
             json={"p_payload": payload},
             timeout=120,
         )
-        response.raise_for_status()
+        if not response.ok:
+            try:
+                raw_error = response.json()
+            except ValueError:
+                raw_error = {"message": response.text[:500]}
+            safe_error = {
+                key: raw_error.get(key)
+                for key in ("code", "message", "details", "hint")
+                if isinstance(raw_error, dict) and raw_error.get(key) is not None
+            }
+            raise SafetyError(
+                f"RPC {name} ditolak HTTP {response.status_code}: "
+                f"{json.dumps(safe_error, ensure_ascii=False)}"
+            )
         result = response.json()
         if not isinstance(result, dict):
             raise SafetyError(f"Respons RPC {name} tidak valid")
