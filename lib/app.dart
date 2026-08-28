@@ -19,6 +19,8 @@ import 'features/reports/reports_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/shell/app_shell.dart';
 
+Widget _selectablePage(Widget child) => SelectionArea(child: child);
+
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
   ref
@@ -35,9 +37,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+      GoRoute(
+        path: '/login',
+        builder: (_, _) => _selectablePage(const LoginPage()),
+      ),
       ShellRoute(
-        builder: (_, _, child) => AppShell(child: child),
+        builder: (_, _, child) => _selectablePage(AppShell(child: child)),
         routes: [
           GoRoute(path: '/', builder: (_, _) => const DashboardPage()),
           GoRoute(path: '/customers', builder: (_, _) => const CustomersPage()),
@@ -65,7 +70,7 @@ class SandiApp extends ConsumerWidget {
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
         themeMode: ref.watch(themeModeProvider),
-        home: const PinLockPage(),
+        home: _selectablePage(const PinLockPage()),
       );
     }
     return MaterialApp.router(

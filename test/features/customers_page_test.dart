@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sandiapp/app_providers.dart';
+import 'package:sandiapp/core/theme.dart';
 import 'package:sandiapp/data/models/customer.dart';
 import 'package:sandiapp/data/models/payment.dart';
 import 'package:sandiapp/data/models/purchase.dart';
@@ -90,5 +91,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('WIWIK'), findsOneWidget); // macet, 100 hari lalu
     expect(find.text('IKA'), findsNothing);     // lancar, 1 hari lalu
+  });
+
+  testWidgets('filter nasabah terbaca pada dark mode', (tester) async {
+    final theme = buildTheme(Brightness.dark);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repoProvider.overrideWithValue(makeRepo())],
+      child: MaterialApp(
+        theme: theme,
+        home: const Scaffold(body: CustomersPage()),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final selectedLabel =
+        DefaultTextStyle.of(tester.element(find.text('Semua'))).style;
+    final unselectedLabel =
+        DefaultTextStyle.of(tester.element(find.text('Berhutang'))).style;
+
+    expect(selectedLabel.color, theme.colorScheme.onSurface);
+    expect(unselectedLabel.color, theme.colorScheme.onSurfaceVariant);
   });
 }

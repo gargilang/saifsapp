@@ -180,7 +180,16 @@ ThemeData buildTheme(Brightness brightness) {
     chipTheme: ChipThemeData(
       shape: const StadiumBorder(),
       selectedColor: colorScheme.primaryContainer,
-      labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+      labelStyle: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onSurfaceVariant,
+      ),
+      secondaryLabelStyle: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onSurface,
+      ),
     ),
     listTileTheme: const ListTileThemeData(
       contentPadding: EdgeInsets.symmetric(horizontal: 16),
