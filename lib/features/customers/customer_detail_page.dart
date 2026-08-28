@@ -117,10 +117,59 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage> {
                   floating: false,
                   pinned: true,
                   backgroundColor: cs.surface,
-                  title: Text(
-                    d.customer.nama,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  title: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: cs.primaryContainer,
+                        child: Text(
+                          _inisial(d.customer.nama),
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              d.customer.nama,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (d.stats.customerSetia)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    size: 11,
+                                    color: cs.primary,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      'Nasabah Setia',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: cs.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   flexibleSpace: FlexibleSpaceBar(
                     background: Padding(

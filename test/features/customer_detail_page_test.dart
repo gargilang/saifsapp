@@ -106,7 +106,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, makeRepo());
-    expect(find.text('Nasabah Setia'), findsOneWidget);
+    expect(find.text('Nasabah Setia'), findsWidgets);
     await tester.dragUntilVisible(
       find.text('RINGKASAN CUSTOMER'),
       find.byType(CustomScrollView),
@@ -392,7 +392,7 @@ void main() {
     );
   });
 
-  testWidgets('nama nasabah tetap terlihat setelah halaman digulir', (
+  testWidgets('identitas nasabah tetap terlihat setelah halaman digulir', (
     tester,
   ) async {
     await pump(tester, makeLongRepo());
@@ -401,5 +401,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('WIWIK').hitTestable(), findsOneWidget);
+    expect(find.text('W').hitTestable(), findsOneWidget);
+    expect(find.text('Nasabah Setia').hitTestable(), findsOneWidget);
   });
 }
