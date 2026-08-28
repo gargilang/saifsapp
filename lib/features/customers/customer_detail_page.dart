@@ -113,7 +113,6 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage> {
               slivers: [
                 // ── SliverAppBar ─────────────────────────────────────────────
                 SliverAppBar(
-                  expandedHeight: 200,
                   floating: false,
                   pinned: true,
                   backgroundColor: cs.surface,
@@ -170,32 +169,6 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage> {
                         ),
                       ),
                     ],
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
-                      child: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (d.customer.noHp != null)
-                              Text(
-                                d.customer.noHp!,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            if (d.customer.alamat != null)
-                              Text(
-                                d.customer.alamat!,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                   actions: [
                     IconButton(
@@ -257,6 +230,27 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage> {
                   padding: const EdgeInsets.all(16),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
+                      if (d.customer.noHp != null ||
+                          d.customer.alamat != null) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (d.customer.noHp != null)
+                              Text(
+                                d.customer.noHp!,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            if (d.customer.alamat != null)
+                              Text(
+                                d.customer.alamat!,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       // ── Stat cards ────────────────────────────────────────
                       Row(
                         children: [

@@ -116,6 +116,15 @@ void main() {
     expect(find.text('RINGKASAN CUSTOMER'), findsOneWidget);
   });
 
+  testWidgets('tidak menyisakan ruang kosong bekas header besar', (
+    tester,
+  ) async {
+    await pump(tester, makeRepo());
+
+    final ringkasanTop = tester.getTopLeft(find.text('TOTAL BELANJA')).dy;
+    expect(ringkasanTop, lessThan(140));
+  });
+
   testWidgets('tombol Ingatkan via WA disabled tanpa no_hp valid', (
     tester,
   ) async {
@@ -138,6 +147,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, makeRepo(noHp: '081234567890'));
+    expect(find.text('081234567890'), findsOneWidget);
     await tester.dragUntilVisible(
       find.text('Ingatkan via WA'),
       find.byType(CustomScrollView),
