@@ -174,82 +174,26 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage> {
                   flexibleSpace: FlexibleSpaceBar(
                     background: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          CircleAvatar(
-                            radius: 32,
-                            backgroundColor: cs.primaryContainer,
-                            child: Text(
-                              _inisial(d.customer.nama),
-                              style: TextStyle(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 22,
+                      child: Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (d.customer.noHp != null)
+                              Text(
+                                d.customer.noHp!,
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (d.stats.customerSetia)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: cs.primaryContainer.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.star_rounded,
-                                            size: 12,
-                                            color: cs.primary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Nasabah Setia',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              color: cs.primary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                if (d.customer.noHp != null)
-                                  Text(
-                                    d.customer.noHp!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
-                                  ),
-                                if (d.customer.alamat != null)
-                                  Text(
-                                    d.customer.alamat!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
+                            if (d.customer.alamat != null)
+                              Text(
+                                d.customer.alamat!,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

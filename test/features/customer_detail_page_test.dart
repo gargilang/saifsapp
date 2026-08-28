@@ -106,7 +106,8 @@ void main() {
     tester,
   ) async {
     await pump(tester, makeRepo());
-    expect(find.text('Nasabah Setia'), findsWidgets);
+    expect(find.text('W'), findsOneWidget);
+    expect(find.text('Nasabah Setia'), findsOneWidget);
     await tester.dragUntilVisible(
       find.text('RINGKASAN CUSTOMER'),
       find.byType(CustomScrollView),
